@@ -1,0 +1,85 @@
+---
+title: "Spotify Tracks dataset"
+author: "Sushma akoju"
+date: "9/15/2021"
+output: html_document
+---
+
+## Dataset Description
+#### Spotify Tracks Dataset is about playlist features and how they compare by genre or album/artist ids w.r.t popularity, acoustic ness, danceability, energy, instrumentals, key (musical chords) etc. Since all of us commonly listen to music, we found it interesting to explore various factors and their influence on playlists that become popular.
+
+## About the features
+#### It seems that Spotify has defined features based on various audio acoustic features such as Shimmer, pitch, tone, fundamental frequency, etc as well as musical acoustics. https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features The audio features seem to be based on pitch ranges, harmonics, overtones of musical instruments along with known vocal quality metrics based on features such as jitter, shimmer, pitch, tone etc. Each musical acoustics, as well as voice acoustics, are analyzed based on defined audio signal processing standards.
+
+## Goal
+#### We primarily focus and attempt to understand each of the features, their technical definitions cited here https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features . we would like to see how existing human notions about music fare against what data actually tells us about. For example, it has been widely popular that the C# chord is most popular in western music. We want to find out how the features contribute to popularity. 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=15, fig.height=10)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(corrplot)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r }
+spotifydf <- read_csv("E:\\cu\\Fall21\\DTSC5301\\project\\SpotifyFeatures.csv", show_col_types = FALSE)
+colSums(is.na(spotifydf))
+head( spotifydf)
+glimpse(spotifydf)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r}
+na.omit(spotifydf)
+genres <- distinct(spotifydf, genre)$genre
+genres
+spotifydf$genre[spotifydf$genre=="Children's Music"] <- "Children’s Music"
+spotifydf[!duplicated(spotifydf$track_id),]
+#spotifydf[(spotifydf$genre=="Children's Music"),]
+distinct(spotifydf, genre)$genre
+```
+
+```{r}
+str(spotifydf)
+columns <- colnames(spotifydf)
+columns
+numeric_columns <- unlist(lapply(spotifydf, is.numeric))
+numeric_columns
+numeric_spotifydf <- spotifydf[,numeric_columns]
+colnames(numeric_spotifydf)
+```
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+library(purrr)
+library(corrr)
+corr_df <- correlate(numeric_spotifydf, quiet = TRUE)
+corr_df
+corr_df %>% 
+  select(-term) %>% 
+  map_dbl(~ mean(., na.rm = TRUE))
+corr_df %>%
+  focus(popularity:valence, mirror = TRUE) %>%
+  rearrange(absolute = FALSE) %>% 
+  shave() %>%
+  rplot(colors = c("lightblue", "green"), legend = TRUE) 
+corr_df2 <- cor(numeric_spotifydf)
+col3 = hcl.colors(10, "YlOrRd", rev = TRUE)
+corrplot(corr_df2, col=col3, method = 'number') 
+corrplot(corr_df2,  col= c("lightblue", "blue"),method = 'color', order = 'alphabet') 
+corrplot(corr_df2,  order = 'hclust', addrect = 2)
+corrplot(corr_df2/2, col.lim=c(-0.5, 0.5))
+
+# colorful number
+
+```
