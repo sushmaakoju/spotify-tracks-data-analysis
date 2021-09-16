@@ -33,4 +33,21 @@ git status
 #### Visualization:
 #### use github rawuser content: <a href="https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv">https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv</a>
 ##### Using corrplot library:
-##### Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library are: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
+##### My analysis and Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library are: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
+
+- Understanding Audio features
+    - Acousticness: 
+    - Danceability: This is based on tempo, rhythm stability, beat strength, and overall regularity. On sclae of 0 to 1, this metric suggests if the track is for dancing.
+    - Energy: Indicates loudness of a track loudness, timbre, onset rate, and general entropy. Bach prelude seems to score low on this feature. The values are expected to be high for Heavy metal genre.
+    - Instrumentalness: predicts if a track contains no vocals. Values above 0.5 indicate Instrumental tracks such as Classical music (example: soloist music).
+    - Liveness: Detects presence of audience. This is indicator if this was recorded live. Higher value suggests this is a live recording.
+    - Loudness: Loudness values are averaged across entire track and are measured in decibels (dB). Ranges -60 to 0. 
+    - Speechiness: detects the presence of spoken words in a track. Measures the exclusivity of the speech over a scale of <= 1. ). Spoken content would give values closer to 1 and values >0.66 as well as values between 0.33 and 0.66 suggest musical tracks such as Rap song genre. Values below 0.33 indicate music and non-speech tracks.
+    - Tempo: 
+    - Valence:
+    - Mode: Mode indicates modality of the track such as minor or major scales - type of scale the melodic content is derived. Measured as 0 as Minor scale and 1 as Major scale.
+    - Key: The track the key is played in. This is an Integer, 0 denotes C, 1 denotes C#. This follows Pitch class notation: <a  href="https://en.wikipedia.org/wiki/Pitch_class">https://en.wikipedia.org/wiki/Pitch_class</a>
+- Types of <a href="https://en.wikipedia.org/wiki/Acoustic_music#Types_of_acoustic_instruments"> Acoustic instruments </a>
+- 
+
+
