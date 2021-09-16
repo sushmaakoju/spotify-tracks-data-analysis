@@ -18,6 +18,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, fig.width=15, fig.height=10)
 library(tidyverse)
+library(readr)
 library(dplyr)
 library(ggplot2)
 library(corrplot)
@@ -30,7 +31,11 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 ```{r }
-spotifydf <- read_csv("E:\\cu\\Fall21\\DTSC5301\\project\\SpotifyFeatures.csv", show_col_types = FALSE)
+#rcurl <- getURL("https://www.kaggle.com/zaheenhamidani/ultimate-spotify-tracks-db/download")
+data_url <- "https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv"
+column_names <- c("genre","artist_name","track_name","track_id","popularity","acousticness","danceability","duration_ms","energy","instrumentalness","key","liveness","loudness","mode","speechiness","tempo","time_signature","valence")
+spotifydf <- read_csv(data_url, show_col_types=FALSE)
+head(spotifydf)
 colSums(is.na(spotifydf))
 head( spotifydf)
 glimpse(spotifydf)
