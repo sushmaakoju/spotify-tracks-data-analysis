@@ -27,5 +27,5 @@ git status
 #### Data Analysis:
 #### For raw github data content url: <a href="https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv">https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv</a>
 ##### Armana: Children's music genre has duplicated entries, https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/armana-anand
-##### Data visualizations: Avani https://www.kaggle.com/zaheenhamidani/ultimate-spotify-tracks-db/download
-##### Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library are: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
+##### Avani's Data visualizations: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/avani-patil
+##### My(sushma's) Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library are: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
