@@ -23,3 +23,8 @@ git clone https://github.com/sushmaakoju/spotify-tracks-data-analysis.git
 cd spotify-tracks-data-analysis
 git status
 ```
+
+#### Data Analysis:
+##### Armana: Children's music genre has duplicated entries, https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/armana-anand
+##### Data visualizations: Avani https://www.kaggle.com/zaheenhamidani/ultimate-spotify-tracks-db/download
+##### Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library are: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
