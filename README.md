@@ -5,9 +5,9 @@
 ### https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features
 
 ## The team consists of:
-### Sushma Akoju
-### Armana Anand
-### Avani Patil
+##### Sushma Akoju
+##### Armana Anand
+##### Avani Patil
 
 ## Dataset Description
 #### Spotify Tracks Dataset is about playlist features and how they compare by genre or album/artist ids w.r.t popularity, acoustic ness, danceability, energy, instrumentals, key (musical chords) etc. Since all of us commonly listen to music, we found it interesting to explore various factors and their influence on playlists that become popular.
@@ -17,3 +17,11 @@
 
 ## Goal
 #### We primarily focus and attempt to understand each of the features, their technical definitions cited here https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features . we would like to see how existing human notions about music fare against what data actually tells us about. For example, it has been widely popular that the C# chord is most popular in western music. We want to find out how the features contribute to popularity. 
+
+### Clone the repository
+
+'''
+git clone https://github.com/sushmaakoju/spotify-tracks-data-analysis.git
+cd spotify-tracks-data-analysis
+git status
+'''
