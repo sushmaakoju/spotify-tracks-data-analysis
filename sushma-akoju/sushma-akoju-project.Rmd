@@ -2,7 +2,7 @@
 title: "Spotify Tracks dataset"
 author: "Sushma akoju"
 date: "9/15/2021"
-output: html_document
+output: github_document
 ---
 
 ## Dataset Description
@@ -44,9 +44,9 @@ library("party", quietly=TRUE)
 ### Get data from url to a Tibble.
 
 ```{r }
-#rcurl <- getURL("https://www.kaggle.com/zaheenhamidani/ultimate-spotify-tracks-db/download")
 data_url <- "https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv"
 column_names <- c("genre","artist_name","track_name","track_id","popularity","acousticness","danceability","duration_ms","energy","instrumentalness","key","liveness","loudness","mode","speechiness","tempo","time_signature","valence")
+
 spotifydf <- read_csv(data_url, show_col_types=FALSE)
 head(spotifydf)
 colSums(is.na(spotifydf))
@@ -63,7 +63,6 @@ genres <- distinct(spotifydf, genre)$genre
 genres
 spotifydf$genre[spotifydf$genre=="Children's Music"] <- "Children’s Music"
 spotifydf[!duplicated(spotifydf$track_id),]
-#spotifydf[(spotifydf$genre=="Children's Music"),]
 genres <- distinct(spotifydf, genre)$genre
 ```
 ## Convert character format columns: key and mode to numeric values
@@ -89,7 +88,9 @@ numeric_columns
 numeric_spotifydf <- spotifydf[,numeric_columns]
 colnames(numeric_spotifydf)
 ```
+
 #### Use Corrr library to plot correlation based on feature groups.
+### Found this library more helpful to group into clusters for higher or similar correlation between features.
 ```{r}
 
 corr_df <- correlate(numeric_spotifydf, quiet = TRUE)
@@ -133,55 +134,11 @@ genres_df %>% ggplot(aes(x = genre, y= n))+
 
 ggplot(data=by_genre,aes(x = genre, y = n, fill=genre)) +
   geom_bar(stat="identity", width=0.5,  position=position_dodge())+
-    #geom_text(aes(label=genre), vjust=1.6, color="white", size=3.5)
 coord_flip()+
-    #scale_fill_brewer(palette="Pastel1") + theme_minimal()+
     labs(title = "Spotify tracks by Genre in US", y= NULL)
-    # geom_errorbar(aes(ymin=n-sd, ymax=n+sd), width=.2,
-    #              position=position_dodge(.9))
-
-
-
-    #geom_line(aes(color = "genre")) +
-  #geom_point(aes(color = "genre")) +
-  #geom_line(aes(y = n, color = "n")) +
-  # geom_point(aes(y = n, color = "n")) +
-  #   scale_y_log10() +
-  #   theme(legend.position="bottom",
-  #         axis.text.x = element_text(angle = 90)) +
-
 ```
 
-```{r}
-
-set.seed(542863)
-# cfspotify <- cforest(numeric_columns ~ ., data = numeric_spotifydf,
-#                     control = cforest_unbiased(mtry = 2, ntree = 50,
-#                                               minbucket = 5, 
-#                                               minsplit = 10))
-
-# spotifydf_permimp <- permimp(cfspotify, conditional = TRUE, progressBar = TRUE)
-
-
-```
-```{r}
-#plot(spotifydf_permimp, type = "bar")
-
-```
-## The above Permutation Importance computations show poor results since values are not normalized and/or adjusting values influences popularity scores very heavily meaning deviation is significant.
-
-```{r}
-
-X <- numeric_spotifydf %>% 
-  select(-c(popularity))
-y <- numeric_spotifydf %>%
-  select(c(popularity))
-summary( X)
-summary(y)
-#xnew <- c(0.45,1.84,2.3)
-#points(xnew,df(xnew),col=2)
-```
-
+## group by Genres and select all features except text based features.
 ```{r}
 
 genres_df <- spotifydf %>%
@@ -191,21 +148,28 @@ genres_df <- spotifydf %>%
 
 ## Check linear fit between all features vs popularity
 ## This is multiple regression since we have multiple predictors vs one response variable.
+## we try to find a linear fit for y = [popularity] and X = [ acousticness, danceability, duration_ms, energy, instrumentalness, liveness, loudness, speechiness, tempo, valence]
 ```{r}
 
 lmfit = lm(popularity ~ acousticness + danceability + duration_ms +energy + instrumentalness + liveness + loudness + speechiness + tempo + valence, numeric_spotifydf )
 summary(lmfit)
 plot(lmfit)
 ```
+## Sushma Akoju: 
+## The summary of linear fit suggests that R-squared value is 0.2339 which should be significant enough to explain how much percentage of data fits linearly. A 23.39% of observations seems to fit linearly, which is not significant enough. Standard error is 15.92 suggests this is 15.92 standard deviations of the residuals away from true regression fit. The p-value of less than 0.01 suggests that null hypothesis that predictors and response variables are not related can be rejected. Hence observed values of response variable are no better than predicted values, by a chance. However since this is a multiple linear regression, F-statistic may also be relevant here since it checks if atleast one of the predictors' coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of squares regression) / (sum of squares error) -> is the ratio of variance explained / varinace that cannot be explained. The standard errors suggest that about ~75% of variance in data cannot be explained. P(> |t|) for each of features also suggests null hypothesis that there is no relation between predictors and response variable - must be rejected.
+
 # checking coefficients
 ```{r}
 coefficients(lmfit)
 ```
+## Above coefficients seems to show
 ```{r}
 
 lmfit2 = lm(popularity ~ acousticness + danceability +energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + key+mode+(energy * loudness) + (valence * danceability) , numeric_spotifydf )
 summary(lmfit2)
 ```
+## The summary of linear fit suggests that R-squared value is 0.2392 which should be significant enough to explain how much percentage of data fits linearly. A 23.92% of observations seems to fit linearly, which is not significant enough. Standard error is 15.92 suggests this is 15.92 standard deviations of the residuals away from true regression fit. The p-value of less than 0.01 suggests that null hypothesis that predictors and response variables are not related can be rejected. Hence observed values of response variable are no better than predicted values, by a chance. However since this is a multiple linear regression, F-statistic may also be relevant here since it checks if atleast one of the predictors' coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of squares regression) / (sum of squares error) -> is the ratio of variance explained / varinace that cannot be explained. The standard errors suggest that about ~75% of variance in data cannot be explained. P(> |t|) for each of features also suggests null hypothesis that there is no relation between predictors and response variable - must be rejected.
+From p(>|t|) = 0.08 for valence, seems to indicate null hypothesis true for valence and popularity score suggesting that valence has no influence on popularity score.
 ```{r}
 plot(lmfit2)
 ```
@@ -222,6 +186,7 @@ ggplot(spotifydf, aes(danceability)) +
 ggplot(spotifydf, aes(key)) +
   geom_density()
 ```
+## Each of features do seem to have different types of density, suggesting distributions are different from each other. It would have been nice if some normalization technique or re-sampling of features was done. But in the interest of time, we could not do this. From the above density plots, it would be reaosnable to find some kind of normalization between feature data.
 ```{r}
 spotify_summary <- datasummary_skim(numeric_spotifydf)
 spotify_summary
@@ -251,12 +216,22 @@ modelsummary(models,gof_omit = ".*",
                            "p = {p.value}"),
              output = "table2.png")
 ```
+## taking linear regression fit analysis further, using model summary package we are able to compare how features fit in comparison between linear regression as well as Gaussian Generalized Linear regression fit. There is no change in P-values or null hypothesis analysis. However, individual feature's standard errors seems significant and are very low. This suggests that linear regression (generalized or OLS) seem to be overfitted.
+
+## We now proceed to explore Random Forest by train and test split.
 ## Create train and test sets
 ```{r}
 train = sample(1:nrow(numeric_spotifydf), 300)
 rf.spotify = randomForest(popularity~., data = numeric_spotifydf, subset = train)
 rf.spotify
 ```
+## In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 273.81 and explained variance is still low 27.88 % of variance explained.
+The following plot suggests that 50 trees or so is enough to fit the model with RFR.
+```{r}
+plot(rf.spotify)
+
+```
+
 ```{r}
 oob.err = double(17)
 test.err = double(17)
@@ -270,13 +245,13 @@ for(mtry in 1:17){
 
 
 ```
-## Decision Trees 17*350 trees with MSE for OOB and Test errors
+## Random Forest Regression Trees 17*350 trees with MSE for OOB and Test errors
 ```{r}
 matplot(1:mtry, cbind(test.err, oob.err), pch = 23, col = c("red", "blue"), type = "b", ylab="Mean Squared Error", lwd=6)
 legend("topright", legend = c("OOB", "Test"), pch = 23, col = c("red", "blue"))
 
 ```
-
+## The above plot suggests that Out-Of-Bag error estimates (red colored curve) is very far apart from test error estimates. There is no correlation between OOB and test errors. Error never really tends to minimize.
 ```{r}
 oob.err 
 test.err
@@ -286,6 +261,7 @@ test.err
 rf.spotify1 = randomForest(popularity~., data = numeric_spotifydf, subset = train, importance = TRUE)
 rf.spotify1
 ```
+## In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 268 and explained variance is still low 29.36 % of variance explained.
 ## Use Random forest to find Variance based Feature Importances.
 ```{r}
 rf.spotify1$importance
@@ -311,9 +287,11 @@ create_rfplot <- function(rf, type){
 create_rfplot(rf.spotify1, type = 2)
 
 ```
+## The Random Forest Regression Feature importances suggest that duration is the most important feature of the response variable i.e Popularity score.
 ```{r}
 data.frame(Feature = row.names(rf.spotify1$importance), Importance = rf.spotify1$importance[,1])
 ```
+## To do permutation Importance to compare Feature importances with that of Feature Importances from Random Forest regression's variance based importance, we need forest and inbag values to be available in RFR forest object so Permutation-based analysis over repeated samples of all-features-except-one is done based on available statistical information. This makes Permutation Importance more relevant. The Permutation Importance done here is also conditional since we observe multi-collinearity between predictors/independent features themselves. Conditional Permutation importance more relevant in this case since finding accuracy when correlation threshold is (suggested > 0.2) which is true in this case. We have multiple features having correlation > 0.2 suggesting Conditional Permutation Importance as more appropriate method to find importance of a feature's relation to response variable.
 ```{r}
 rf.spotify2 = randomForest(popularity~., data = numeric_spotifydf, subset = train, replace = FALSE, nodesize = 7, keep.forest = TRUE, keep.inbag = TRUE)
 rf.spotify2
@@ -334,8 +312,9 @@ ggplot(as.data.frame(permimp$values), aes(x = reorder(names(permimp$values)
              axis.text.x  = element_text(size = 20, color = "black"),
              axis.text.y  = element_text(size = 20, color = "black"))+xlab("Features")+ylab("Importance")
 ```
+## Lastly, we see that on the contrary, acousticness has no influence over popularity score. However, duration, instrumentalness, loudness, valence seem to have good influence over response variable.
 
-
+## Finally, we think given the number of tracks, we can use most statsitically important features to train and test regression fit using cross validation and epochs. Further we would like to conduct tests on a randomly generated date from the model fit. We further would like to explore, as a future work, to find regression or models that better  fit multi-collinear features while also finding some better techniques to normalize each of feature-wise distributions.
 
 
 
