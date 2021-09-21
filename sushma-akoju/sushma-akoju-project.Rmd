@@ -317,16 +317,12 @@ data.frame(Feature = row.names(rf.spotify1$importance), Importance = rf.spotify1
 ```{r}
 rf.spotify2 = randomForest(popularity~., data = numeric_spotifydf, subset = train, replace = FALSE, nodesize = 7, keep.forest = TRUE, keep.inbag = TRUE)
 rf.spotify2
-permimp <- permimp(rf.spotify2, conditional = TRUE, progressBar = FALSE)
+permimp <- permimp(rf.spotify2, conditional = TRUE, progressBar = FALSE, do_check=FALSE)
 ```
 ```{r}
 permimp$values
 ```
 
-```{r}
-geom_bar(permimp, horizontal = TRUE, fill=factor(permimp$values["names"]))
-
-```
 ```{r}
 ggplot(as.data.frame(permimp$values), aes(x = reorder(names(permimp$values)
 , as.numeric(permimp$values)), y = as.numeric(permimp$values))) +
