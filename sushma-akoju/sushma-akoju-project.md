@@ -17,6 +17,45 @@ Sushma akoju
 
 ##### Example: “My favorite things” song from “The Sound of music” movie which was very popular back in 1960s and still considered a classic is unfortunately has a popularity score of zero while a modern, contemporary version inspired from the same song and rewritten with different lyrics and named as “7 rings” by Ariana Grande, has a popularity score of 100.
 
+-   Understanding Audio features
+    -   Acousticness:
+    -   Danceability: This is based on tempo, rhythm stability, beat
+        strength, and overall regularity. On sclae of 0 to 1, this
+        metric suggests if the track is for dancing.
+    -   Energy: Indicates loudness of a track loudness, timbre, onset
+        rate, and general entropy. Bach prelude seems to score low on
+        this feature. The values are expected to be high for Heavy metal
+        genre.
+    -   Instrumentalness: predicts if a track contains no vocals. Values
+        above 0.5 indicate Instrumental tracks such as Classical music
+        (example: soloist music).
+    -   Liveness: Detects presence of audience. This is indicator if
+        this was recorded live. Higher value suggests this is a live
+        recording.
+    -   Loudness: Loudness values are averaged across entire track and
+        are measured in decibels (dB). Ranges -60 to 0.
+    -   Speechiness: detects the presence of spoken words in a track.
+        Measures the exclusivity of the speech over a scale of &lt;= 1.
+        ). Spoken content would give values closer to 1 and
+        values &gt;0.66 as well as values between 0.33 and 0.66 suggest
+        musical tracks such as Rap song genre. Values below 0.33
+        indicate music and non-speech tracks.
+    -   Tempo: number of beats per minute (BPM). It is the speed or pace
+        of a given track.
+    -   Valence: Defines the positiveness or negativeness of the track.
+    -   Mode: Mode indicates modality of the track such as minor or
+        major scales - type of scale the melodic content is derived.
+        Measured as 0 as Minor scale and 1 as Major scale.
+    -   Key: The track the key is played in. This is an Integer, 0
+        denotes C, 1 denotes C\#. This follows Pitch class notation:
+        <a  href="https://en.wikipedia.org/wiki/Pitch_class">https://en.wikipedia.org/wiki/Pitch\_class</a>
+    -   Duration\_ms: Duration of track in milliseconds.
+-   Types of
+    <a href="https://en.wikipedia.org/wiki/Acoustic_music#Types_of_acoustic_instruments">
+    Acoustic instruments </a>
+-   The features are extracted based on an custom Algorithm from The
+    Echo Nest company.
+
 ##### Get data from url to a Tibble.
 
 ``` r
@@ -1272,8 +1311,8 @@ rf.spotify
     ##                      Number of trees: 500
     ## No. of variables tried at each split: 4
     ## 
-    ##           Mean of squared residuals: 234.419
-    ##                     % Var explained: 25.55
+    ##           Mean of squared residuals: 235.785
+    ##                     % Var explained: 29.46
 
 ##### In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 273.81 and explained variance is still low 27.88 % of variance explained.
 
@@ -1329,17 +1368,17 @@ legend("topright", legend = c("OOB", "Test"), pch = 23, col = c("red", "blue"))
 oob.err 
 ```
 
-    ##  [1] 233.9487 231.7620 235.2057 233.1482 233.3280 241.0269 237.9278 244.5082
-    ##  [9] 240.0133 238.9901 241.8636 239.0087 242.0197 246.3948 243.3847 244.2600
-    ## [17] 240.4664
+    ##  [1] 245.7008 235.4772 241.0570 232.9300 240.3137 238.8437 237.1922 238.4778
+    ##  [9] 239.5243 237.6900 243.5464 242.7432 236.4484 242.9072 243.0130 240.6229
+    ## [17] 245.7865
 
 ``` r
 test.err
 ```
 
-    ##  [1] 252.2396 246.8818 246.1219 246.5126 247.1287 245.6982 247.6111 246.6372
-    ##  [9] 246.2274 248.1877 246.9074 247.1080 247.1833 248.0504 248.4770 248.5262
-    ## [17] 246.1835
+    ##  [1] 246.5881 240.8395 240.6710 243.2219 246.0018 245.5838 246.9970 246.8887
+    ##  [9] 250.4858 250.6391 249.8646 252.5771 252.3086 252.9612 254.2134 251.3154
+    ## [17] 252.0269
 
 ##### Basic Random Forest on all features
 
@@ -1355,8 +1394,8 @@ rf.spotify1
     ##                      Number of trees: 500
     ## No. of variables tried at each split: 4
     ## 
-    ##           Mean of squared residuals: 234.9117
-    ##                     % Var explained: 25.39
+    ##           Mean of squared residuals: 232.466
+    ##                     % Var explained: 30.45
 
 ``` r
 summary(rf.spotify1)
@@ -1396,30 +1435,30 @@ plot(rf.spotify1)
 rf.spotify1$importance
 ```
 
-    ##                     %IncMSE IncNodePurity
-    ## acousticness     56.4731301    11554.9825
-    ## danceability     24.9105828     8264.3280
-    ## duration_ms      12.4444267     8297.1611
-    ## energy           36.0491741     9146.4349
-    ## instrumentalness 21.4491211     6965.5219
-    ## key               7.3830126     4923.9065
-    ## liveness         -0.6137627     7030.8540
-    ## loudness         44.6293233    12748.9929
-    ## mode              0.8772364      860.9517
-    ## speechiness      18.9374989     9640.8766
-    ## tempo             1.6116582     4862.3072
-    ## valence           5.2777749     5500.4443
+    ##                      %IncMSE IncNodePurity
+    ## acousticness      71.0549683    11272.9975
+    ## danceability       9.1421299     7461.5494
+    ## duration_ms       47.8551299    12133.8866
+    ## energy            41.2680734     8180.8193
+    ## instrumentalness  12.0287258     5720.7854
+    ## key               -0.2312723     3467.0076
+    ## liveness           3.5814959     6492.8933
+    ## loudness         105.4063308    16681.1947
+    ## mode              -0.1113909      559.5766
+    ## speechiness       33.5328134     9869.4102
+    ## tempo              4.7928565     6637.8984
+    ## valence            9.7080177     6601.9925
 
 ``` r
 rf.spotify1$importanceSD
 ```
 
     ##     acousticness     danceability      duration_ms           energy 
-    ##        3.4236013        1.8573348        1.5783420        3.0008409 
+    ##        3.7890208        1.8062963        2.8874055        3.4180208 
     ## instrumentalness              key         liveness         loudness 
-    ##        1.9006333        1.3219453        1.4666942        3.1759366 
+    ##        1.7169784        1.3147434        1.6459082        4.9272165 
     ##             mode      speechiness            tempo          valence 
-    ##        0.6212025        1.8594382        1.1695230        1.4863392
+    ##        0.4559478        2.1099929        1.5033995        1.7233438
 
 ##### Plot the Feature importances from Random Forest Regression for each feature.
 
@@ -1451,19 +1490,19 @@ create_rfplot(rf.spotify1, type = 2)
 data.frame(Feature = row.names(rf.spotify1$importance), Importance = rf.spotify1$importance[,1])
 ```
 
-    ##                           Feature Importance
-    ## acousticness         acousticness 56.4731301
-    ## danceability         danceability 24.9105828
-    ## duration_ms           duration_ms 12.4444267
-    ## energy                     energy 36.0491741
-    ## instrumentalness instrumentalness 21.4491211
-    ## key                           key  7.3830126
-    ## liveness                 liveness -0.6137627
-    ## loudness                 loudness 44.6293233
-    ## mode                         mode  0.8772364
-    ## speechiness           speechiness 18.9374989
-    ## tempo                       tempo  1.6116582
-    ## valence                   valence  5.2777749
+    ##                           Feature  Importance
+    ## acousticness         acousticness  71.0549683
+    ## danceability         danceability   9.1421299
+    ## duration_ms           duration_ms  47.8551299
+    ## energy                     energy  41.2680734
+    ## instrumentalness instrumentalness  12.0287258
+    ## key                           key  -0.2312723
+    ## liveness                 liveness   3.5814959
+    ## loudness                 loudness 105.4063308
+    ## mode                         mode  -0.1113909
+    ## speechiness           speechiness  33.5328134
+    ## tempo                       tempo   4.7928565
+    ## valence                   valence   9.7080177
 
 ##### To do permutation Importance to compare Feature importances with that of Feature Importances from Random Forest regression’s variance based importance, we need forest and inbag values to be available in RFR forest object so Permutation-based analysis over repeated samples of all-features-except-one is done based on available statistical information. This makes Permutation Importance more relevant. The Permutation Importance done here is also conditional since we observe multi-collinearity between predictors/independent features themselves. Conditional Permutation importance more relevant in this case since finding accuracy when correlation threshold is (suggested &gt; 0.2) which is true in this case. We have multiple features having correlation &gt; 0.2 suggesting Conditional Permutation Importance as more appropriate method to find importance of a feature’s relation to response variable.
 
@@ -1479,8 +1518,8 @@ rf.spotify2
     ##                      Number of trees: 500
     ## No. of variables tried at each split: 4
     ## 
-    ##           Mean of squared residuals: 235.1893
-    ##                     % Var explained: 25.3
+    ##           Mean of squared residuals: 234.6463
+    ##                     % Var explained: 29.8
 
 ``` r
 permimp <- permimp(rf.spotify2, conditional = TRUE, progressBar = FALSE, do_check=FALSE)
@@ -1493,11 +1532,11 @@ permimp$values
 ```
 
     ##     acousticness     danceability      duration_ms           energy 
-    ##        0.9139943        3.9570856        6.5987937        0.8530541 
+    ##        5.6853740        0.3011930       23.4989491        2.5854005 
     ## instrumentalness              key         liveness         loudness 
-    ##        9.2645800        4.9013473        1.7549607        2.6505698 
+    ##        3.2084568       -0.7243447        1.8304988        8.3122517 
     ##             mode      speechiness            tempo          valence 
-    ##       -0.3232627       11.1670224       -0.2723595        2.3466203
+    ##       -0.1895208       10.3305935        2.6615618        3.5579121
 
 ``` r
 ggplot(as.data.frame(permimp$values), aes(x = reorder(names(permimp$values)
