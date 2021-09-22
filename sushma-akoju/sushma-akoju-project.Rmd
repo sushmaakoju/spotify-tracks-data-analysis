@@ -271,7 +271,7 @@ rf.spotify
 The following plot suggests that 50 trees or so is enough to fit the model with RFR.
 
 ```{r}
-plot(rf.spotify1)
+plot(rf.spotify)
 
 ```
 
@@ -311,6 +311,12 @@ rf.spotify1 = randomForest(popularity~., data = numeric_spotifydf, subset = trai
 rf.spotify1
 summary(rf.spotify1)
 ```
+
+```{r}
+plot(rf.spotify1)
+```
+
+
 ##### In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 268 and explained variance is still low 29.36 % of variance explained.
 
 ##### Use Random forest to find Variance based Feature Importances.
