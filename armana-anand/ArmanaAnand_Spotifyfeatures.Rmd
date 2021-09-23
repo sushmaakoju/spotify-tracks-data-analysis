@@ -9,20 +9,76 @@ library(glue)
 library(ggplot2)
 library(ggcorrplot)
 library(broom)
+library(funModeling) #to utilize plot_num 
 library(lubridate)
 library(viridis)
+library(GGally)
 library(scales)
 ```
+# Objective 
 
-Let's import the spotify data set.
+Spotify is the worlds largest audio streaming application with services available in more than 175 countries. With a market share of approximately 32%, it has  365 million monthly active users, including 165 million paying subscribers, as of June 2021. A user can search for music based on a song, artist and genre album. They can create, share, edit playlists with other listeners all over the world. With such a massive user base, as one would imagine Spotify data is a gold mine for training machine learning algorithms and recommendation based systems. As a freemium service, Spotify implements multitudes of data learning tools and algorithms to leverage its data and create a streamlined experience for its users, unmatched by its competitors. Our objective with this project is to gain a deeper understanding of the Data Science discipline by accessing this data, and doing some preliminary analysis to come up with some conclusive observations.
 
-```{r dataset}
-# Importing the data set
+
+## Organization of the Report
+* Objective
+* Methodology
+  + Web Data Collection
+  + Pre-processing
+* Analysis and Visualizations
+  + Popularity of each genre
+  + Correlation Map
+* Modeling the Data
+  
+* Potential Bias and Conclusion
+
+# Methodology 
+
+In this section, the process of data gathering and cleaning are discussed.
+
+## Web Data Collection
+```{r}
+#Importing the data set
 
 tracks <- read_csv("https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv")
 
+head(tracks,n=10)
+colnames(tracks)
+
 ```
 
+Downloaded from Kaggle, this data was originally sourced from Spotify using their API. 
+
+[Here is the link to the Kaggle dataset.](https://www.kaggle.com/tomigelo/spotify-audio-features)
+
+The data set consists of the features of around 200k  top songs—Worldwide. Ranked by a proprietary algorithm for popularity in 2019.
+
+Here are the features which will be measured to evaluate the data.
+
+* **Genre**
+* **Artist_name**
+* **Track_name**
+* **Track_id**
+* **Popularity**: Scaled scaled from 0-100(Least –Most Popular)
+* **Acousticness**: Measure of how acoustic the track is. Ranges from 0.0 to 1.0
+* **Danceability**: Measured using a mixture of song features such as beat strength, tempo stability, and   overall tempo. 
+* **Duration_ms**
+* **Energy**: Measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity. Typically, energetic tracks feel fast, loud, and noisy.
+* **Instrumentalness**: Does it contain vocals? Range 0-1.
+* **Key**
+* **Liveness**: Detects the presence of an audience in the recording. 
+* **Loudness**: Overall loudness of a track in decibels (dB). Values range between -55 and 5 dB.
+* **Mode**
+* **Speechiness**: Detects the presence of spoken words in a track.
+* **Tempo**: Overall estimated tempo of a track in beats per minute (BPM).
+* **Time_signature**
+* **Valence**: Measure from 0.0 to 1.0 describing the musical positiveness conveyed by a track
+
+
+More in depth information on how Spotify tags and analyses these features can be found [here]("https://community.spotify.com/t5/Spotify-for-Developers/") 
+
+
+## Pre-processing
 Let's check for missing values in our data set.
 
 ```{r missingvalues}
@@ -78,12 +134,25 @@ glimpse(tracks1)
 
 ```
 
+Before we can move to visualizations and deeper analysis, lets take a look at what the overall trend of our data is.
+
+```{r}
+spotify_hist <- tracks[,-c(1,2,3,4,5,11,17)]
+plot_num(spotify_hist)
+
+```
+
+From the above it is interesting to note that danceability has a pretty normal distribution of songs in our dataset. To no surprise, there are not many people listening to Bach or YoYo Ma renditions of Vivaldi off late. We can clearly see the evidence of that by looking at the  tall peak that signifies the clustering of most of our songs on the low to zero instrumental scale. Similarly, majority of the popular songs generally are 2- 5 mins long.  
+
+
+# Analysis and Visualizations
+
 Now that we have pre-processed our data set, we can visualize basic data to find correlations among our variables.
 
 From our data set, we can group our data set by genre and focus on the popularity parameter for visualization of data.
 
 ```{r plot_averagepopularity_genre}
-genre_popularity <- tracks1 %>% select(popularity, genre) %>% group_by(genre) %>% summarise("average_popularity" = round(mean(popularity)))
+genre_popularity <- tracks %>% select(popularity, genre) %>% group_by(genre) %>% summarise("average_popularity" = round(mean(popularity)))
 
 p <- ggplot(data=genre_popularity, mapping = aes(x = reorder(genre,average_popularity), y = average_popularity, fill = genre)) +
   geom_col() +
@@ -103,31 +172,34 @@ p
 We have plotted the music genre from highest popularity to lowest popularity.
 
 We can see that the Top 5 popular genres on spotify are -
-Pop 
-Rap
-Rock
-HipHop
-Dance
+1. Pop 
+2. Rap
+3. Rock
+4. HipHop
+5. Dance
 
 Genres with lowest popularity on spotify.
 
-Anime, 
-Comedy, 
-Opera, 
-Movie, and 
-A Capella
+1. Anime 
+2. Comedy 
+3. Opera 
+4. Movie 
+5. A Capella
 
-Let's analyse the relationship between all numeric spotify features now using a correlation map.
+Let's analyse the relationship between all numeric Spotify features now using a correlation map.
 
-```{r plotcorr}
+```{r plotcorr, warning=FALSE}
 # Plotting a correlation heat map to check correlation between all audio features.
 
-ggcorr(tracks1, low = "blue", high = "red")
+ggcorr(tracks, low = "blue", high = "red")
 ```
 
 From above graph we can list out below significant observations -
 
 1) Energy and loudness have the highest correlation.
+
 2) Energy and acousticness have a highly-correlated inverse relationship
+
 3) Loudness and acousticness have a highly-correlated inverse relationship
+
 4) Some of the variables most correlated to Popularity seem to be: acousticness, danceability, energy, instrumentalness, and loudness.
