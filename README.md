@@ -24,11 +24,23 @@ cd spotify-tracks-data-analysis
 git status
 ```
 
+### To upload changes to Github
+```
+cd spotify-tracks-data-analysis
+git pull
+git commit -m "one short summary of this change"
+git push origin main
+
+```
+
 #### Data Analysis:
 #### For raw github data content url: <a href="https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv">https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv</a>
 ##### Armana: Children's music genre has duplicated entries, https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/armana-anand
 ##### Avani's Data visualizations: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/avani-patil
+
+
 ##### My(sushma's) analysis on understanding musical and vocal acoustics and Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library are: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
+
 - Understanding Audio features
     - Acousticness: 
     - Danceability: This is based on tempo, rhythm stability, beat strength, and overall regularity. On sclae of 0 to 1, this metric suggests if the track is for dancing.
@@ -37,11 +49,19 @@ git status
     - Liveness: Detects presence of audience. This is indicator if this was recorded live. Higher value suggests this is a live recording.
     - Loudness: Loudness values are averaged across entire track and are measured in decibels (dB). Ranges -60 to 0. 
     - Speechiness: detects the presence of spoken words in a track. Measures the exclusivity of the speech over a scale of <= 1. ). Spoken content would give values closer to 1 and values >0.66 as well as values between 0.33 and 0.66 suggest musical tracks such as Rap song genre. Values below 0.33 indicate music and non-speech tracks.
-    - Tempo: 
-    - Valence:
+    - Tempo: number of beats per minute (BPM). It is the speed or pace
+        of a given track.
+    - Valence: Defines the positiveness or negativeness of the track.
     - Mode: Mode indicates modality of the track such as minor or major scales - type of scale the melodic content is derived. Measured as 0 as Minor scale and 1 as Major scale.
     - Key: The track the key is played in. This is an Integer, 0 denotes C, 1 denotes C#. This follows Pitch class notation: <a  href="https://en.wikipedia.org/wiki/Pitch_class">https://en.wikipedia.org/wiki/Pitch_class</a>
 - Types of <a href="https://en.wikipedia.org/wiki/Acoustic_music#Types_of_acoustic_instruments"> Acoustic instruments </a>
-- 
+
+##### Example songs, popularity scores: "My favorite things" song from "The Sound of music" movie which was very popular back in 1960s and still considered a classic is unfortunately has a popularity score of zero while a modern, contemporary version inspired from the same song and rewritten with different lyrics and named as "7 rings" by Ariana Grande, has a popularity score of 100.
+
+##### Each of features do seem to have different types of density, suggesting distributions are different from each other. It would have been nice if some normalization technique or re-sampling of features was done. But in the interest of time, we could not do this. From the above density plots, it would be reaosnable to find some kind of normalization between feature data.
+
+
+
+
 
 

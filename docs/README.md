@@ -9,13 +9,13 @@ Sushma akoju
 
 ## About the features
 
-##### It seems that Spotify has defined features based on various audio acoustic features such as Shimmer, pitch, tone, fundamental frequency, etc as well as musical acoustics. <https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features> The audio features seem to be based on pitch ranges, harmonics, overtones of musical instruments along with known vocal quality metrics based on features such as jitter, shimmer, pitch, tone etc. Each musical acoustics, as well as voice acoustics, are analyzed based on defined audio signal processing standards.
+##### It seems that Spotify has defined features based on various audio- acoustic features such as Shimmer, pitch, tone, fundamental frequency, etc as well as musical acoustics. <https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features> The audio features seem to be based on pitch ranges, harmonics, overtones of musical instruments along with known vocal quality metrics based on features such as fundamental frequency, jitter, shimmer, pitch, tone etc. Each os metrics for musical acoustics, as well as voice acoustics, are analyzed based on defined audio signal processing standards and algorithms. Each of metrics are averaged over entire track to define a single score/number for representing value of each metric.
 
 ## Goal
 
 ##### We primarily focus and attempt to understand each of the features, their technical definitions cited here <https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features> . we would like to see how existing human notions about music fare against what data actually tells us about. For example, it has been widely popular that the C\# chord is most popular in western music. We want to find out how the features contribute to popularity.
 
-##### Example: “My favorite things” song from “The Sound of music” movie which was very popular back in 1960s and still considered a classic is unfortunately has a popularity score of zero while a modern, contemporary version inspired from the same song and rewritten with different lyrics and named as “7 rings” by Ariana Grande, has a popularity score of 100.
+##### Example: “My favorite things” song from “The Sound of music” movie which was very popular back in 1960s and still considered a classic, unfortunately has a popularity score of zero while a modern, contemporary version inspired from the same song and rewritten with lyrics and named as “7 rings” by Ariana Grande, has a popularity score of 100.
 
 -   Understanding Audio features
     -   Acousticness:
