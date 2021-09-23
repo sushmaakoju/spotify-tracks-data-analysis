@@ -1,0 +1,133 @@
+```{r libraries}
+options(scipen=999)
+
+# Importing the libraries
+
+library(tidyverse)
+library(dplyr)
+library(glue)
+library(ggplot2)
+library(ggcorrplot)
+library(broom)
+library(lubridate)
+library(viridis)
+library(scales)
+```
+
+Let's import the spotify data set.
+
+```{r dataset}
+# Importing the data set
+
+tracks <- read_csv("https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv")
+
+```
+
+Let's check for missing values in our data set.
+
+```{r missingvalues}
+#checking for missing values in the data set
+
+colSums(is.na(tracks))
+```
+
+As per above summary, there are no missing values in this data set.
+
+```{r distinctvalues}
+# As there are no missing values, we will check for other errors.
+
+# Let's check for distinct genre names to see if any genre is repeated.
+
+distinct(data.frame(tracks$genre)) 
+```
+
+As we can see there are two Children's Music genre. We should rectify this typo so that a single genre is visible.
+
+```{r cleandata}
+
+# Rectifying typo in genre name Children's Music.
+
+colnames(tracks)[colnames(tracks$genre) == "Children's Music"] <- "Children’s Music"
+
+# Rechecking the distinct values.
+
+distinct(data.frame(tracks$genre))
+```
+
+```{r mutate}
+#Mutate variables from numeric to factor
+
+tracks <- tracks  %>% 
+  mutate(genre = as.factor(genre),
+         key = as.factor(key),
+         genre = as.factor(str_replace_all(genre, "[[:punct:]]", "")),
+         mode = as.factor(mode))
+
+summary(tracks)
+```
+
+```{r filterdata}
+
+# Filter columns that are not presently needed for our analysis
+
+tracks1 <- tracks %>% select(-c(track_id,time_signature))
+
+# Glimpse data
+
+glimpse(tracks1)
+
+```
+
+Now that we have pre-processed our data set, we can visualize basic data to find correlations among our variables.
+
+From our data set, we can group our data set by genre and focus on the popularity parameter for visualization of data.
+
+```{r plot_averagepopularity_genre}
+genre_popularity <- tracks1 %>% select(popularity, genre) %>% group_by(genre) %>% summarise("average_popularity" = round(mean(popularity)))
+
+p <- ggplot(data=genre_popularity, mapping = aes(x = reorder(genre,average_popularity), y = average_popularity, fill = genre)) +
+  geom_col() +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    
+  ) +
+  labs(
+    y = "Average popularity",
+    x = "Genre"
+  )
+
+p
+```
+We have plotted the music genre from highest popularity to lowest popularity.
+
+We can see that the Top 5 popular genres on spotify are -
+Pop 
+Rap
+Rock
+HipHop
+Dance
+
+Genres with lowest popularity on spotify.
+
+Anime, 
+Comedy, 
+Opera, 
+Movie, and 
+A Capella
+
+Let's analyse the relationship between all numeric spotify features now using a correlation map.
+
+```{r plotcorr}
+# Plotting a correlation heat map to check correlation between all audio features.
+
+ggcorr(tracks1, low = "blue", high = "red")
+```
+
+From above graph we can list out below significant observations -
+
+1) Energy and loudness have the highest correlation.
+2) Energy and acousticness have a highly-correlated inverse relationship
+3) Loudness and acousticness have a highly-correlated inverse relationship
+4) Some of the variables most correlated to Popularity seem to be: acousticness, danceability, energy, instrumentalness, and loudness.
