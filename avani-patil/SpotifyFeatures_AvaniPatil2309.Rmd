@@ -1,0 +1,269 @@
+---
+title: "SpotifyFeatures_AvaniPatil"
+author: "AvaniPatil"
+date: "9/23/2021"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+```{r libraries, include=FALSE, echo = FALSE}
+options(scipen=999)
+
+# Importing the libraries
+
+library(tidyverse)
+library(dplyr)
+library(glue)
+library(ggplot2)
+library(ggcorrplot)
+library(broom)
+library(lubridate)
+library(viridis)
+library(GGally)
+library(scales)
+```
+
+Let's import the Spotify data set.
+
+```{r importdataset}
+# Importing the data set
+
+tracks <- read_csv("https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv")
+
+```
+
+Let's check for missing values in our data set.
+
+```{r missingvalues}
+
+# Checking for missing values in the data set
+
+colSums(is.na(tracks))
+```
+
+As per above summary, there are no missing values in this data set.
+
+```{r distinctvalues}
+# As there are no missing values, we will check for other errors.
+
+# Let's check for distinct genre names to see if any genre is repeated.
+
+distinct(data.frame(tracks$genre)) 
+```
+
+As we can see there are two Children's Music genre. We should rectify this typo so that a single genre is visible.
+
+```{r cleandata}
+
+# Rectifying typo in genre name Children's Music.
+
+colnames(tracks)[colnames(tracks$genre) == "Children's Music"] <- "Children’s Music"
+
+# Rechecking the distinct values.
+
+distinct(data.frame(tracks$genre))
+```
+
+```{r mutate}
+#Mutate variables from numeric to factor
+
+tracks <- tracks  %>% 
+  mutate(genre = as.factor(genre),
+         key = as.factor(key),
+         genre = as.factor(str_replace_all(genre, "[[:punct:]]", "")),
+         mode = as.factor(mode))
+
+summary(tracks)
+```
+
+```{r filterdata}
+
+# Filter columns that are not presently needed for our analysis
+
+tracks1 <- tracks %>% select(-c(track_id,time_signature))
+
+# Glimpse data
+
+glimpse(tracks1)
+
+```
+
+End of Data cleaning and pre-processing
+
+## Analysis
+
+Now that we have pre-processed our data set, we can visualize basic data to find correlations among our variables.
+
+In our data set, we will be focusing on Popularity as our dependent variable. 
+So how is popularity actually calculated and what makes a song popular?
+
+According to Spotify - popularity is calculated by an algorithm and is based, in the most part, on the total number of plays the track has had and how recently those tracks are played. Generally speaking, songs that are being played a lot now will have a higher popularity than songs that were played a lot in the past.
+
+So the essential question for us here is : could we use a song’s attributes to predict a track’s ‘popularity’?
+
+Now that we are familiar with the data set which we are using and the objective of our analysis, we would plot a couple of visualizations to check whether we are able to derive any observations and insights from these.
+
+So for starters, let's check the relationship between all the audio features of Spotify data set to try and find some correlation between them. Hence, we plotted a correlation heat map to analyze the correlation between all features at once.
+
+Let's analyse the relationship between all numeric spotify features now using a correlation map.
+
+```{r plotcorr}
+# Plotting a correlation heat map to check correlation between all audio features.
+
+ggcorr(tracks1, low = "blue", high = "red")
+```
+
+From above graph we can pluck out below significant observations -
+
+1) ‘Energy’ and ‘loudness’ have the highest correlation, and a positive one, which is not very surprising as the louder a song is, the more energy it has.
+
+2) ‘Energy’ and ‘acousticness’ have a highly-correlated inverse relationship, which also makes total sense. The more a song skews towards being acoustic, the less energy value it tends to have.
+We noticed similar inverse relationship between ‘Loudness’ and ‘acousticness’ as well.
+
+
+Let's sort the the data by popularity to check the top 10 popular songs.
+
+```{r}
+tracks1 %>% top_n(10,popularity) %>% select(artist_name, track_name, popularity) %>% arrange(desc(popularity))
+```
+
+Now that we have plotted the correlation heat map, let's check the correlation coefficient values against each relationship.
+
+```{r PearsonCorr}
+
+# Eliminate the parameters which are not relevant to our correlation analysis and copy the same in a new df. 
+
+tracks2 <- tracks %>% select(-c(track_id,time_signature,key,mode))
+
+cor(tracks2[,4:14])
+
+```
+
+
+With our dependent variable being ‘popularity’, from above graph we can note that there are poor correlation values across most of our independent variables.
+From this correlation matrix, we can pluck five of the best features (ones with the highest correlation) to use later on as predictors while training our model -
+acousticness, 
+danceability, 
+energy, 
+instrumentalness, and 
+loudness.
+
+
+Now let's compare Popularity with Key and check if we can find any significant relationship between these tw attributes.
+
+So when it comes to western music, there are 12 keys. Let's check the popularity for each and every key.
+
+```{r}
+
+# Plot keys and their popularity values.
+
+tracks %>% group_by(key) %>% select(key, popularity) %>%
+  ggplot(aes(x=as.factor(key),y=popularity,fill=as.factor(key))) +
+  geom_boxplot() + theme(legend.position = "none") +
+  labs(title="Popularity of Song Keys",
+       x="Key", y="Popularity")
+```
+
+There seems to be little differentiation between the keys and popularity. However, one key does seem to have a larger number of popular songs in it - C-Sharp key.
+
+We can check this by filtering out songs where popularity is above 70 on a scale on 100 and check how many popular songs fall under this key.
+
+
+```{r}
+tracks %>% filter(popularity > 70) %>% group_by(key) %>% summarize(count = n()) %>% arrange(desc(count))
+```
+Key 1 (which applies to c-Sharp) has more popular songs (1068 songs) than other keys. This could be a potential predictor variable, so we will encode a new binary variable we can use in our model.
+
+
+```{r}
+#  Creating a new binary variable for key attribute
+
+tracks$isKey1 <- as.integer(tracks$key == 1)
+```
+
+Linear Modelling
+
+To warm-up, we will be starting with a simple linear regression model and try and manipulate the predictor attributes to find the a model with lowest Residual standard error and highest Adjusted R-squared.
+
+Linear Model 1 (m1):
+
+Dependent Variable - Popularity
+Predictor Variables - acousticness danceability, energy, instrumentalness, liveness, loudness, speechiness, tempo, valence, isKey1, energy and loudness.
+
+```{r lm1}
+m1 <- lm(popularity ~ acousticness + danceability + energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + isKey1 + (energy * loudness), data=tracks)
+
+summary(m1)
+```
+
+From above model, we can observe that the Adjusted R-squared is very low and the Residual standard error is on the higher end for this model.
+Also, the key attribute is not adding up to anything in our model. 
+
+In our next modelling attempt, let's get rid of the key attribute and add couple of more parameters which have shown correlation among them.
+
+
+Linear Model 2 (m2):
+
+Dependent Variable - Popularity
+Predictor Variables - acousticness danceability, energy, instrumentalness, liveness, loudness, speechiness, tempo, valence, energy and loudness, acousticness and instrumentalness.
+
+In this model, we have added an additional predictor acousticness and instrumentalness.
+
+```{r lm2}
+m2 <- lm(popularity ~ acousticness + danceability + energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + (energy * loudness) + (acousticness * instrumentalness), data=tracks)
+
+summary(m2)
+```
+
+In above model, we can see that the Adjusted R-squared is has increased from 0.2338 to 0.2456 and the Residual standard error has decreased from 15.92 to 15.8.
+However, the updated Adjusted R-squared is still quite low. 
+
+Let's try and improve the model further by adding for correlation predictors.
+
+Linear Model 3 (m3):
+
+Dependent Variable - Popularity
+Predictor Variables - acousticness danceability, energy, instrumentalness, liveness, loudness, speechiness, tempo, valence, energy and loudness, acousticness and instrumentalness, energy and danceability.
+
+In this model, we have added an additional predictor energy and danceability.
+
+```{r}
+m3 <- lm(popularity ~ acousticness + danceability + energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + (energy * loudness) + (acousticness * instrumentalness) + (energy * danceability), data=tracks)
+
+summary(m3)
+```
+
+In above model, we can see that the Adjusted R-squared is has increased from 0.2456 to 0.2464 and the Residual standard error has decreased from 15.8 to 15.79.
+
+We’ll chose the model m3 as it has the best fit (R-Squared) to the data compared to other models.
+
+Let's plot model m3 using residual plot and QQ plot.
+
+```{r plotresidual}
+# Plotting residual plot for Model 3
+
+am3 <- augment(m3)
+
+am3 %>% ggplot(aes(x=.fitted,y=.resid)) +
+  geom_point(alpha=0.1) + geom_hline(yintercept=0) +
+  labs(title="Residual Plot")
+```
+
+```{r plotQQ}
+
+# Plotting QQ plot for Model 3
+
+am3 %>% ggplot(aes(sample=.std.resid)) +
+  geom_qq() + geom_qq_line() +
+  labs(title="QQ Plot")
+```
+
+
+The residual plot has a definite pattern however, the QQ plot shows that our residuals aren’t exactly normal throughout the range of samples.
+
+Given the low Adjusted R-squared, and unusual patterns in the residuals, the models we’ve created seem like they are unsuitable for predicting a song’s popularity on Spotify.
