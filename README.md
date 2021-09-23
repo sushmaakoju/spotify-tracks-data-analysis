@@ -60,6 +60,10 @@ git push origin main
 
 ##### Each of features do seem to have different types of density, suggesting distributions are different from each other. It would have been nice if some normalization technique or re-sampling of features was done. But in the interest of time, we could not do this. From the above density plots, it would be reaosnable to find some kind of normalization between feature data.
 
+### Github hosted pages
+##### The R Github Markdown summary for this project is hosted at: https://sushmaakoju.github.io/spotify-tracks-data-analysis/
+
+
 
 
 

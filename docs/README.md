@@ -1554,4 +1554,9 @@ ggplot(as.data.frame(permimp$values), aes(x = reorder(names(permimp$values)
 
 ##### Lastly, we see that on the contrary, acousticness has no influence over popularity score. However, duration, instrumentalness, loudness, valence seem to have good influence over response variable.
 
-##### Finally, we think given the number of tracks, we can use most statsitically important features to train and test regression fit using cross validation and epochs. Further we would like to conduct tests on a randomly generated date from the model fit. We further would like to explore, as a future work, to find regression or models that better fit multi-collinear features while also finding some better techniques to normalize each of feature-wise distributions.
+##### Finally, we think given the number of tracks, we can use most statsitically important features to train and test regression fit using cross validation and epochs. Further we would like to conduct tests on a randomly generated date from the model fit. We further would like to explore, as a future work, to find regression or models that better fit multi-collinear features while also finding some better techniques to normalize each of feature-wise distributions. The additional information about musical and vocal acoustics and the pattern in which the acoustic signals themselves relate to the popularity score will be helpful.
+
+
+
+
+
