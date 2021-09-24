@@ -53,14 +53,9 @@ git push origin main
 ##### Armana: Children's music genre has duplicated entries, general preporcessing and factorization of attributes, analysis and visualizations of attributes. https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/armana-anand
 ##### Avani's Data visualizations, analysis and Linear Regression Modelling: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/avani-patil
 
-
 ##### My(sushma's) analysis on understanding musical and vocal acoustics and Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library, and Linear regression with result analysis, Generalized Linear model, Random Forest regression, Permutation Importance and Feature importances analysis only w.r.t modelling and feature and permutation importances only: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
 
-
-
 ##### Example songs, popularity scores: "My favorite things" song from "The Sound of music" movie which was very popular back in 1960s and still considered a classic is unfortunately has a popularity score of zero while a modern, contemporary version inspired from the same song and rewritten with different lyrics and named as "7 rings" by Ariana Grande, has a popularity score of 100.
-
-##### Each of features do seem to have different types of density, suggesting distributions are different from each other. It would have been nice if some normalization technique or re-sampling of features was done. But in the interest of time, we could not do this. From the above density plots, it would be reaosnable to find some kind of normalization between feature data.
 
 ### Github hosted pages
 ##### The R Github Markdown summary for this project is hosted at: https://sushmaakoju.github.io/spotify-tracks-data-analysis/

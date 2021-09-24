@@ -2,15 +2,18 @@
 title: "Spotify_Data_Track_Analysis"
 author: "AvaniPatil, Sushma Akoju, Armana Anand"
 date: "9/23/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
-```{r libraries}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=30, fig.height=20)
+
 options(scipen=999)
 
 # Importing the libraries
 
-knitr::opts_chunk$set(echo = TRUE, fig.width=30, fig.height=20)
 library(tidyverse)
 library(dplyr)
 library(glue)
@@ -25,7 +28,6 @@ library(readr)
 library(corrplot)
 library(randomForest) # basic implementation
 library(purrr)
-library(corrr)
 library(vtree)
 library(reshape)
 library(modelsummary)
@@ -33,7 +35,8 @@ library(gt)
 library(kableExtra)
 library(funModeling)
 library(rpart)
-
+library(stats)
+library(corrplot)
 library("permimp")
 library("party", quietly=TRUE)
 ```
@@ -423,37 +426,36 @@ We primarily focus and attempt to understand each of the features, their technic
 
 Example: "My favorite things" song from "The Sound of music" movie which was very popular back in 1960s and still considered a classic is unfortunately has a popularity score of zero while a modern, contemporary version inspired from the same song and rewritten with different lyrics and named as "7 rings" by Ariana Grande, has a popularity score of 100.
 
-##### Get data from url to a Tibble.
-
+##### check few quick summaries for dataframe
 ```{r }
-spotifydf <- tracks
-head(spotifydf)
-colSums(is.na(spotifydf))
-head( spotifydf)
-glimpse(spotifydf)
+head(tracks)
+colSums(is.na(tracks))
+head( tracks)
+glimpse(tracks)
 ```
 
 ## Including Plots
 Some genres are duplicated. (encoding mismatches).
 
 ```{r}
-na.omit(spotifydf)
-genres <- distinct(spotifydf, genre)$genre
+na.omit(tracks)
+genres <- distinct(tracks, genre)$genre
 genres
-spotifydf[!duplicated(spotifydf$track_id),]
-genres <- distinct(spotifydf, genre)$genre
+tracks[!duplicated(tracks$track_id),]
+genres <- distinct(tracks, genre)$genre
+
 ```
 
 Convert character format columns: key and mode to numeric values. 
 
 ```{r}
-unique(spotifydf$key)
-unique(as.numeric(as.factor(spotifydf$key)))
-spotifydf$key <- as.numeric(as.factor(spotifydf$key))
+unique(tracks$key)
+unique(as.numeric(as.factor(tracks$key)))
+tracks$key <- as.numeric(as.factor(tracks$key))
 
-unique(spotifydf$mode)
-unique(as.numeric(as.factor(spotifydf$mode)))
-spotifydf$mode <- as.numeric(as.factor(spotifydf$mode))
+unique(tracks$mode)
+unique(as.numeric(as.factor(tracks$mode)))
+tracks$mode <- as.numeric(as.factor(tracks$mode))
 
 ```
 
@@ -461,35 +463,26 @@ spotifydf$mode <- as.numeric(as.factor(spotifydf$mode))
 Get all numeric columns from the dataframe.
 
 ```{r}
-str(spotifydf)
-columns <- colnames(spotifydf)
+str(tracks)
+columns <- colnames(tracks)
 columns
-numeric_columns <- unlist(lapply(spotifydf, is.numeric))
+numeric_columns <- unlist(lapply(tracks, is.numeric))
 numeric_columns
-numeric_spotifydf <- spotifydf[,numeric_columns]
+numeric_spotifydf <- tracks[,numeric_columns] %>% select (-c(isKey1))
 colnames(numeric_spotifydf)
 ```
 
 ## Correlation based on feature groups
 
-Use Corrr library to plot correlation based on feature groups.
+Use Corrplot and stats library to plot correlation based on feature groups, numeric plots.
 
 Found this library more helpful to group into clusters for higher or similar correlation between features.
 
 ```{r}
-
-corr_df <- correlate(numeric_spotifydf, quiet = TRUE)
-corr_df
-corr_df %>% 
-  select(-term) %>% 
-  map_dbl(~ mean(., na.rm = TRUE))
-
-corr_df2 <- cor(numeric_spotifydf)
+corr_df2 <- stats::cor(numeric_spotifydf)
 col3 = hcl.colors(10, "YlOrRd", rev = TRUE)
-corr1 <- corrplot(corr_df2, col=col3, method = 'number') 
+corr1 <- corrplot(corr_df2, col=col3, method = 'number')
 
-corrplot(corr_df2,  order = 'hclust', addrect = 2)
-corrplot(corr_df2/2, col.lim=c(-0.5, 0.5))
 ```
 
 
@@ -501,10 +494,10 @@ For each feature, plot grouping w.r.t Popularity.
 
 ```{r}
 
-genres_df <- spotifydf %>%
+genres_df <- tracks %>%
    select(popularity, genre)%>%
     count(popularity, genre)
-by_genres <- spotifydf %>% group_by(genre, popularity)
+by_genres <- tracks %>% group_by(genre, popularity)
 by_genres %>% summarise(
   popularity = mean(popularity),
 )
@@ -529,7 +522,7 @@ Group by Genres and select all features except text based features.
 
 ```{r}
 
-genres_df <- spotifydf %>%
+genres_df <- tracks %>%
   select(-c(artist_name, track_name, track_id, time_signature, key))
 
 ```
@@ -550,13 +543,13 @@ Plot the density distributions of each of features.
 spotify_histograms <- numeric_spotifydf[,-c(4)]
 plot_num(spotify_histograms)
 
-ggplot(spotifydf, aes(popularity)) +
+ggplot(tracks, aes(popularity)) +
   geom_density()
-ggplot(spotifydf, aes(energy)) +
+ggplot(tracks, aes(energy)) +
   geom_density()
-ggplot(spotifydf, aes(danceability)) +
+ggplot(tracks, aes(danceability)) +
   geom_density()
-ggplot(spotifydf, aes(key)) +
+ggplot(tracks, aes(key)) +
   geom_density()
 ```
 
@@ -575,7 +568,7 @@ summary(lmfit)
 plot(lmfit)
 ```
 
-The summary of linear fit suggests that R-squared value is 0.2339 which is not significant enough to explain how much percentage of data fits linearly. Standard error is 15.92 suggests this is 15.92 standard deviations of the residuals away from true regression fit. The p-value of less than 0.01 suggests that null hypothesis that predictors and response variables are not related can be rejected. Hence observed values of response variable are no better than predicted values, by a chance. However since this is a multiple linear regression, F-statistic may also be relevant here since it checks if atleast one of the predictors' coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of squares regression) / (sum of squares error) -> is the ratio of variance explained / varinace that cannot be explained. The standard errors suggest that about ~75% of variance in data cannot be explained. P(> |t|) for each of features also suggests null hypothesis that there is no relation between predictors and response variable - must be rejected.
+The summary of linear fit suggests that R-squared value is 0.2339 which is not significant enough to explain how much percentage of data fits linearly. Standard error is 15.92 suggests this is 15.92 standard deviations of the residuals away from true regression fit. The p-value of less than 0.01 suggests that null hypothesis that predictors and response variables are not related can be rejected. Hence observed values of response variable are no better than predicted values, by a chance. However since this is a multiple linear regression, F-statistic may also be relevant here since it checks if atleast one of the predictors' coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of squares regression) / (sum of squares error) -> is the ratio of variance explained / variance that cannot be explained. The standard errors suggest that about ~75% of variance in data cannot be explained. P(> |t|) for each of features also suggests null hypothesis that there is no relation between predictors and response variable - must be rejected.
 
 checking coefficients
 
@@ -645,7 +638,7 @@ rf.spotify = randomForest(popularity~., data = numeric_spotifydf, subset = train
 rf.spotify
 ```
 
-In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 273.81 and explained variance is still low 27.88 % of variance explained.
+In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 252.81 and explained variance is still low 24.79 % of variance explained.
 The following plot suggests that 50 trees or so is enough to fit the model with RFR.
 
 ```{r}
