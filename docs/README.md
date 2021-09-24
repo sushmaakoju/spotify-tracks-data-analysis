@@ -1,87 +1,162 @@
-Spotify Tracks dataset
+Spotify\_Data\_Track\_Analysis
 ================
-Sushma akoju
-9/15/2021
+AvaniPatil, Sushma Akoju, Armana Anand
+9/23/2021
 
-## Dataset Description
+# Objective
 
-##### Spotify Tracks Dataset is about playlist features and how they compare by genre or album/artist ids w.r.t popularity, acoustic ness, danceability, energy, instrumentals, key (musical chords) etc. Since all of us commonly listen to music, we found it interesting to explore various factors and their influence on playlists that become popular.
+Spotify is the worlds largest audio streaming application with services
+available in more than 175 countries. With a market share of
+approximately 32%, it has 365 million monthly active users, including
+165 million paying subscribers, as of June 2021. A user can search for
+music based on a song, artist and genre album. They can create, share,
+edit playlists with other listeners all over the world. With such a
+massive user base, as one would imagine Spotify data is a gold mine for
+training machine learning algorithms and recommendation based systems.
+As a freemium service, Spotify implements multitudes of data learning
+tools and algorithms to leverage its data and create a streamlined
+experience for its users, unmatched by its competitors. Our objective
+with this project is to gain a deeper understanding of the Data Science
+discipline by accessing this data, and doing some preliminary analysis
+to come up with some conclusive observations.
 
-## About the features
+We will primarily focus and attempt to understand each of the features,
+their technical definitions cited here
+https://developer.spotify.com/documentation/web-api/reference/\#endpoint-get-audio-features
+. And we would like to see how existing human notions about music fare
+against what data actually tells us about. For example, it has been
+widely popular that the C\# chord is most popular in western music. We
+want to find out how the features contribute to popularity.
 
-##### It seems that Spotify has defined features based on various audio- acoustic features such as Shimmer, pitch, tone, fundamental frequency, etc as well as musical acoustics. <https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features> The audio features seem to be based on pitch ranges, harmonics, overtones of musical instruments along with known vocal quality metrics based on features such as fundamental frequency, jitter, shimmer, pitch, tone etc. Each os metrics for musical acoustics, as well as voice acoustics, are analyzed based on defined audio signal processing standards and algorithms. Each of metrics are averaged over entire track to define a single score/number for representing value of each metric.
+## Organization of the Report
 
-## Goal
+-   Objective
+-   Methodology
+    -   Web Data Collection
+    -   Pre-processing
+-   Analysis and Visualizations
+    -   Popularity of each genre
+    -   Correlation Map
+    -   Correlation coefficient for each feature
+    -   Popularity for each key
+    -   Correlation based on feature groups
+    -   Spotify tracks by Genre in the US
+    -   Data summary and density distribution for all Spotify features
+    -   Permutation Importances
+-   Modeling the Data
+    -   Linear Regression Modelling to predict popularity
+    -   Linear Regression Modelling to check the linear fit
+    -   Random Forest Regression Fit
+-   Potential Bias and Conclusion
 
-##### We primarily focus and attempt to understand each of the features, their technical definitions cited here <https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features> . we would like to see how existing human notions about music fare against what data actually tells us about. For example, it has been widely popular that the C\# chord is most popular in western music. We want to find out how the features contribute to popularity.
+# Methodology
 
-##### Example: “My favorite things” song from “The Sound of music” movie which was very popular back in 1960s and still considered a classic, unfortunately has a popularity score of zero while a modern, contemporary version inspired from the same song and rewritten with lyrics and named as “7 rings” by Ariana Grande, has a popularity score of 100.
+In this section, the process of data gathering and cleaning are
+discussed.
 
--   Understanding Audio features
-    -   Acousticness:
-    -   Danceability: This is based on tempo, rhythm stability, beat
-        strength, and overall regularity. On sclae of 0 to 1, this
-        metric suggests if the track is for dancing.
-    -   Energy: Indicates loudness of a track loudness, timbre, onset
-        rate, and general entropy. Bach prelude seems to score low on
-        this feature. The values are expected to be high for Heavy metal
-        genre.
-    -   Instrumentalness: predicts if a track contains no vocals. Values
-        above 0.5 indicate Instrumental tracks such as Classical music
-        (example: soloist music).
-    -   Liveness: Detects presence of audience. This is indicator if
-        this was recorded live. Higher value suggests this is a live
-        recording.
-    -   Loudness: Loudness values are averaged across entire track and
-        are measured in decibels (dB). Ranges -60 to 0.
-    -   Speechiness: detects the presence of spoken words in a track.
-        Measures the exclusivity of the speech over a scale of &lt;= 1.
-        ). Spoken content would give values closer to 1 and
-        values &gt;0.66 as well as values between 0.33 and 0.66 suggest
-        musical tracks such as Rap song genre. Values below 0.33
-        indicate music and non-speech tracks.
-    -   Tempo: number of beats per minute (BPM). It is the speed or pace
-        of a given track.
-    -   Valence: Defines the positiveness or negativeness of the track.
-    -   Mode: Mode indicates modality of the track such as minor or
-        major scales - type of scale the melodic content is derived.
-        Measured as 0 as Minor scale and 1 as Major scale.
-    -   Key: The track the key is played in. This is an Integer, 0
-        denotes C, 1 denotes C\#. This follows Pitch class notation:
-        <a  href="https://en.wikipedia.org/wiki/Pitch_class">https://en.wikipedia.org/wiki/Pitch\_class</a>
-    -   Duration\_ms: Duration of track in milliseconds.
--   Types of
-    <a href="https://en.wikipedia.org/wiki/Acoustic_music#Types_of_acoustic_instruments">
-    Acoustic instruments </a>
--   The features are extracted based on an custom Algorithm from The
-    Echo Nest company.
-
-##### Get data from url to a Tibble.
+## Web Data Collection
 
 ``` r
-data_url <- "https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv"
-column_names <- c("genre","artist_name","track_name","track_id","popularity","acousticness","danceability","duration_ms","energy","instrumentalness","key","liveness","loudness","mode","speechiness","tempo","time_signature","valence")
+#Importing the data set
 
-spotifydf <- read_csv(data_url, show_col_types=FALSE)
-head(spotifydf)
+tracks <- read_csv("https://raw.githubusercontent.com/sushmaakoju/spotify-tracks-data-analysis/main/SpotifyFeatures.csv")
 ```
 
-    ## # A tibble: 6 x 18
-    ##   genre artist_name  track_name   track_id  popularity acousticness danceability
-    ##   <chr> <chr>        <chr>        <chr>          <dbl>        <dbl>        <dbl>
-    ## 1 Movie Henri Salva~ C'est beau ~ 0BRjO6ga~          0        0.611        0.389
-    ## 2 Movie Martin & le~ Perdu d'ava~ 0BjC1Nfo~          1        0.246        0.59 
-    ## 3 Movie Joseph Will~ Don't Let M~ 0CoSDzoN~          3        0.952        0.663
-    ## 4 Movie Henri Salva~ Dis-moi Mon~ 0Gc6TVm5~          0        0.703        0.24 
-    ## 5 Movie Fabien Nataf Ouverture    0IuslXpM~          4        0.95         0.331
-    ## 6 Movie Henri Salva~ Le petit so~ 0Mf1jKa8~          0        0.749        0.578
+    ## Rows: 232725 Columns: 18
+
+    ## -- Column specification --------------------------------------------------------
+    ## Delimiter: ","
+    ## chr  (7): genre, artist_name, track_name, track_id, key, mode, time_signature
+    ## dbl (11): popularity, acousticness, danceability, duration_ms, energy, instr...
+
+    ## 
+    ## i Use `spec()` to retrieve the full column specification for this data.
+    ## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+head(tracks,n=10)
+```
+
+    ## # A tibble: 10 x 18
+    ##    genre artist_name  track_name   track_id popularity acousticness danceability
+    ##    <chr> <chr>        <chr>        <chr>         <dbl>        <dbl>        <dbl>
+    ##  1 Movie Henri Salva~ C'est beau ~ 0BRjO6g~          0      0.611          0.389
+    ##  2 Movie Martin & le~ Perdu d'ava~ 0BjC1Nf~          1      0.246          0.59 
+    ##  3 Movie Joseph Will~ Don't Let M~ 0CoSDzo~          3      0.952          0.663
+    ##  4 Movie Henri Salva~ Dis-moi Mon~ 0Gc6TVm~          0      0.703          0.24 
+    ##  5 Movie Fabien Nataf Ouverture    0IuslXp~          4      0.95           0.331
+    ##  6 Movie Henri Salva~ Le petit so~ 0Mf1jKa~          0      0.749          0.578
+    ##  7 Movie Martin & le~ Premières r~ 0NUiKYR~          2      0.344          0.703
+    ##  8 Movie Laura Mayne  Let Me Let ~ 0PbIF9Y~         15      0.939          0.416
+    ##  9 Movie Chorus       Helka        0ST6uPf~          0      0.00104        0.734
+    ## 10 Movie Le Club des~ Les bisous ~ 0VSqZ3K~         10      0.319          0.598
     ## # ... with 11 more variables: duration_ms <dbl>, energy <dbl>,
     ## #   instrumentalness <dbl>, key <chr>, liveness <dbl>, loudness <dbl>,
     ## #   mode <chr>, speechiness <dbl>, tempo <dbl>, time_signature <chr>,
     ## #   valence <dbl>
 
 ``` r
-colSums(is.na(spotifydf))
+colnames(tracks)
+```
+
+    ##  [1] "genre"            "artist_name"      "track_name"       "track_id"        
+    ##  [5] "popularity"       "acousticness"     "danceability"     "duration_ms"     
+    ##  [9] "energy"           "instrumentalness" "key"              "liveness"        
+    ## [13] "loudness"         "mode"             "speechiness"      "tempo"           
+    ## [17] "time_signature"   "valence"
+
+## Armana Anand Code
+
+Downloaded from Kaggle, this data was originally sourced from Spotify
+using their API.
+
+[Here is the link to the Kaggle
+dataset.](https://www.kaggle.com/tomigelo/spotify-audio-features)
+
+The data set consists of the features of around 200k top
+songs—Worldwide. Ranked by a proprietary algorithm for popularity in
+2019.
+
+Here are the features which will be measured to evaluate the data.
+
+-   **Genre**
+-   **Artist\_name**
+-   **Track\_name**
+-   **Track\_id**
+-   **Popularity**: Scaled scaled from 0-100(Least –Most Popular)
+-   **Acousticness**: Measure of how acoustic the track is. Ranges from
+    0.0 to 1.0
+-   **Danceability**: Measured using a mixture of song features such as
+    beat strength, tempo stability, and overall tempo.
+-   **Duration\_ms**
+-   **Energy**: Measure from 0.0 to 1.0 and represents a perceptual
+    measure of intensity and activity. Typically, energetic tracks feel
+    fast, loud, and noisy.
+-   **Instrumentalness**: Does it contain vocals? Range 0-1.
+-   **Key**
+-   **Liveness**: Detects the presence of an audience in the recording.
+-   **Loudness**: Overall loudness of a track in decibels (dB). Values
+    range between -55 and 5 dB.
+-   **Mode**
+-   **Speechiness**: Detects the presence of spoken words in a track.
+-   **Tempo**: Overall estimated tempo of a track in beats per minute
+    (BPM).
+-   **Time\_signature**
+-   **Valence**: Measure from 0.0 to 1.0 describing the musical
+    positiveness conveyed by a track
+
+More in depth information on how Spotify tags and analyses these
+features can be found
+[here](%22https://community.spotify.com/t5/Spotify-for-Developers/%22)
+
+## Pre-processing
+
+Let’s check for missing values in our data set.
+
+``` r
+#checking for missing values in the data set
+
+colSums(is.na(tracks))
 ```
 
     ##            genre      artist_name       track_name         track_id 
@@ -95,31 +170,751 @@ colSums(is.na(spotifydf))
     ##   time_signature          valence 
     ##                0                0
 
+As per above summary, there are no missing values in this data set.
+
 ``` r
-head( spotifydf)
+# As there are no missing values, we will check for other errors.
+
+# Let's check for distinct genre names to see if any genre is repeated.
+
+distinct(data.frame(tracks$genre)) 
 ```
 
-    ## # A tibble: 6 x 18
+    ##        tracks.genre
+    ## 1             Movie
+    ## 2               R&B
+    ## 3         A Capella
+    ## 4       Alternative
+    ## 5           Country
+    ## 6             Dance
+    ## 7        Electronic
+    ## 8             Anime
+    ## 9              Folk
+    ## 10            Blues
+    ## 11            Opera
+    ## 12          Hip-Hop
+    ## 13 Children's Music
+    ## 14 Children’s Music
+    ## 15              Rap
+    ## 16            Indie
+    ## 17        Classical
+    ## 18              Pop
+    ## 19           Reggae
+    ## 20        Reggaeton
+    ## 21             Jazz
+    ## 22             Rock
+    ## 23              Ska
+    ## 24           Comedy
+    ## 25             Soul
+    ## 26       Soundtrack
+    ## 27            World
+
+As we can see there are two Children’s Music genre. We should rectify
+this typo so that a single genre is visible.
+
+``` r
+# Rectifying typo in genre name Children's Music.
+
+colnames(tracks)[colnames(tracks$genre) == "Children's Music"] <- "Children’s Music"
+
+# Rechecking the distinct values.
+
+distinct(data.frame(tracks$genre))
+```
+
+    ##        tracks.genre
+    ## 1             Movie
+    ## 2               R&B
+    ## 3         A Capella
+    ## 4       Alternative
+    ## 5           Country
+    ## 6             Dance
+    ## 7        Electronic
+    ## 8             Anime
+    ## 9              Folk
+    ## 10            Blues
+    ## 11            Opera
+    ## 12          Hip-Hop
+    ## 13 Children's Music
+    ## 14 Children’s Music
+    ## 15              Rap
+    ## 16            Indie
+    ## 17        Classical
+    ## 18              Pop
+    ## 19           Reggae
+    ## 20        Reggaeton
+    ## 21             Jazz
+    ## 22             Rock
+    ## 23              Ska
+    ## 24           Comedy
+    ## 25             Soul
+    ## 26       Soundtrack
+    ## 27            World
+
+``` r
+#Mutate variables from numeric to factor
+
+tracks <- tracks  %>% 
+  mutate(genre = as.factor(genre),
+         key = as.factor(key),
+         genre = as.factor(str_replace_all(genre, "[[:punct:]]", "")),
+         mode = as.factor(mode))
+
+summary(tracks)
+```
+
+    ##              genre        artist_name         track_name       
+    ##  Childrens Music: 14756   Length:232725      Length:232725     
+    ##  Comedy         :  9681   Class :character   Class :character  
+    ##  Soundtrack     :  9646   Mode  :character   Mode  :character  
+    ##  Indie          :  9543                                        
+    ##  Jazz           :  9441                                        
+    ##  Pop            :  9386                                        
+    ##  (Other)        :170272                                        
+    ##    track_id           popularity      acousticness     danceability   
+    ##  Length:232725      Min.   :  0.00   Min.   :0.0000   Min.   :0.0569  
+    ##  Class :character   1st Qu.: 29.00   1st Qu.:0.0376   1st Qu.:0.4350  
+    ##  Mode  :character   Median : 43.00   Median :0.2320   Median :0.5710  
+    ##                     Mean   : 41.13   Mean   :0.3686   Mean   :0.5544  
+    ##                     3rd Qu.: 55.00   3rd Qu.:0.7220   3rd Qu.:0.6920  
+    ##                     Max.   :100.00   Max.   :0.9960   Max.   :0.9890  
+    ##                                                                       
+    ##   duration_ms          energy          instrumentalness         key       
+    ##  Min.   :  15387   Min.   :0.0000203   Min.   :0.0000000   C      :27583  
+    ##  1st Qu.: 182857   1st Qu.:0.3850000   1st Qu.:0.0000000   G      :26390  
+    ##  Median : 220427   Median :0.6050000   Median :0.0000443   D      :24077  
+    ##  Mean   : 235122   Mean   :0.5709577   Mean   :0.1483012   C#     :23201  
+    ##  3rd Qu.: 265768   3rd Qu.:0.7870000   3rd Qu.:0.0358000   A      :22671  
+    ##  Max.   :5552917   Max.   :0.9990000   Max.   :0.9990000   F      :20279  
+    ##                                                            (Other):88524  
+    ##     liveness          loudness          mode         speechiness    
+    ##  Min.   :0.00967   Min.   :-52.457   Major:151744   Min.   :0.0222  
+    ##  1st Qu.:0.09740   1st Qu.:-11.771   Minor: 80981   1st Qu.:0.0367  
+    ##  Median :0.12800   Median : -7.762                  Median :0.0501  
+    ##  Mean   :0.21501   Mean   : -9.570                  Mean   :0.1208  
+    ##  3rd Qu.:0.26400   3rd Qu.: -5.501                  3rd Qu.:0.1050  
+    ##  Max.   :1.00000   Max.   :  3.744                  Max.   :0.9670  
+    ##                                                                     
+    ##      tempo        time_signature        valence      
+    ##  Min.   : 30.38   Length:232725      Min.   :0.0000  
+    ##  1st Qu.: 92.96   Class :character   1st Qu.:0.2370  
+    ##  Median :115.78   Mode  :character   Median :0.4440  
+    ##  Mean   :117.67                      Mean   :0.4549  
+    ##  3rd Qu.:139.05                      3rd Qu.:0.6600  
+    ##  Max.   :242.90                      Max.   :1.0000  
+    ## 
+
+``` r
+# Filter columns that are not presently needed for our analysis
+
+tracks1 <- tracks %>% select(-c(track_id,time_signature))
+
+# Glimpse data
+
+glimpse(tracks1)
+```
+
+    ## Rows: 232,725
+    ## Columns: 16
+    ## $ genre            <fct> Movie, Movie, Movie, Movie, Movie, Movie, Movie, Movi~
+    ## $ artist_name      <chr> "Henri Salvador", "Martin & les fées", "Joseph Willia~
+    ## $ track_name       <chr> "C'est beau de faire un Show", "Perdu d'avance (par G~
+    ## $ popularity       <dbl> 0, 1, 3, 0, 4, 0, 2, 15, 0, 10, 0, 2, 4, 3, 0, 0, 0, ~
+    ## $ acousticness     <dbl> 0.61100, 0.24600, 0.95200, 0.70300, 0.95000, 0.74900,~
+    ## $ danceability     <dbl> 0.389, 0.590, 0.663, 0.240, 0.331, 0.578, 0.703, 0.41~
+    ## $ duration_ms      <dbl> 99373, 137373, 170267, 152427, 82625, 160627, 212293,~
+    ## $ energy           <dbl> 0.9100, 0.7370, 0.1310, 0.3260, 0.2250, 0.0948, 0.270~
+    ## $ instrumentalness <dbl> 0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.123~
+    ## $ key              <fct> C#, F#, C, C#, F, C#, C#, F#, C, G, E, C, F#, D#, G, ~
+    ## $ liveness         <dbl> 0.3460, 0.1510, 0.1030, 0.0985, 0.2020, 0.1070, 0.105~
+    ## $ loudness         <dbl> -1.828, -5.559, -13.879, -12.178, -21.150, -14.970, -~
+    ## $ mode             <fct> Major, Minor, Minor, Major, Major, Major, Major, Majo~
+    ## $ speechiness      <dbl> 0.0525, 0.0868, 0.0362, 0.0395, 0.0456, 0.1430, 0.953~
+    ## $ tempo            <dbl> 166.969, 174.003, 99.488, 171.758, 140.576, 87.479, 8~
+    ## $ valence          <dbl> 0.8140, 0.8160, 0.3680, 0.2270, 0.3900, 0.3580, 0.533~
+
+Before we can move to visualizations and deeper analysis, lets take a
+look at what the overall trend of our data is.
+
+``` r
+spotify_hist <- tracks[,-c(1,2,3,4,5,11,17)]
+plot_num(spotify_hist)
+```
+
+    ## Warning: `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> =
+    ## "none")` instead.
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+From the above it is interesting to note that danceability has a pretty
+normal distribution of songs in our dataset. To no surprise, there are
+not many people listening to Bach or YoYo Ma renditions of Vivaldi off
+late. We can clearly see the evidence of that by looking at the tall
+peak that signifies the clustering of most of our songs on the low to
+zero instrumental scale. Similarly, majority of the popular songs
+generally are 2- 5 mins long.
+
+# Analysis and Visualizations
+
+Now that we have pre-processed our data set, we can visualize basic data
+to find correlations among our variables.
+
+From our data set, we can group our data set by genre and focus on the
+popularity parameter for visualization of data.
+
+``` r
+genre_popularity <- tracks %>% select(popularity, genre) %>% group_by(genre) %>% summarise("average_popularity" = round(mean(popularity)))
+
+p <- ggplot(data=genre_popularity, mapping = aes(x = reorder(genre,average_popularity), y = average_popularity, fill = genre)) +
+  geom_col() +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    
+  ) +
+  labs(
+    y = "Average popularity",
+    x = "Genre"
+  )
+
+p
+```
+
+![](README_files/figure-gfm/plot_averagepopularity_genre-1.png)<!-- -->  
+We have plotted the music genre from highest popularity to lowest
+popularity.
+
+We can see that the Top 5 popular genres on spotify are -  
+1. Pop  
+2. Rap  
+3. Rock  
+4. HipHop  
+5. Dance
+
+Genres with lowest popularity on spotify.
+
+1.  Anime
+2.  Comedy
+3.  Opera
+4.  Movie
+5.  A Capella
+
+Let’s analyse the relationship between all numeric Spotify features now
+using a correlation map.
+
+``` r
+# Plotting a correlation heat map to check correlation between all audio features.
+
+ggcorr(tracks, low = "blue", high = "red")
+```
+
+![](README_files/figure-gfm/plotcorr-1.png)<!-- -->
+
+From above graph we can list out below significant observations -
+
+1.  Energy and loudness have the highest correlation.
+
+2.  Energy and acousticness have a highly-correlated inverse
+    relationship
+
+3.  Loudness and acousticness have a highly-correlated inverse
+    relationship
+
+4.  Some of the variables most correlated to Popularity seem to be:
+    acousticness, danceability, energy, instrumentalness, and loudness.
+
+## Avani Patil Code
+
+Now that we are familiar with the data set attributes and the objective
+of our analysis, let’s check for missing values in our data set.
+
+``` r
+# Checking for missing values in the data set
+
+colSums(is.na(tracks))
+```
+
+    ##            genre      artist_name       track_name         track_id 
+    ##                0                0                0                0 
+    ##       popularity     acousticness     danceability      duration_ms 
+    ##                0                0                0                0 
+    ##           energy instrumentalness              key         liveness 
+    ##                0                0                0                0 
+    ##         loudness             mode      speechiness            tempo 
+    ##                0                0                0                0 
+    ##   time_signature          valence 
+    ##                0                0
+
+As per above summary, there are no missing values in this data set.
+
+Now that we have the pre-processed data set, we can visualize basic data
+to find correlations among our variables.
+
+In our data set, we will be focusing on Popularity as our dependent
+variable.  
+So how is popularity actually calculated and what makes a song popular?
+
+According to Spotify - popularity is calculated by an algorithm and is
+based, in the most part, on the total number of plays the track has had
+and how recently those tracks are played. Generally speaking, songs that
+are being played a lot now will have a higher popularity than songs that
+were played a lot in the past.
+
+So for starters, let’s check the relationship between all the audio
+features of Spotify data set to try and find some correlation between
+them using th correlation heatmap mentioned above.
+
+From above mentioned heatmap we can summarize that -
+
+1.  ‘Energy’ and ‘loudness’ have the highest correlation, and a positive
+    one, which is not very surprising as the louder a song is, the more
+    energy it has.
+
+2.  ‘Energy’ and ‘acousticness’ have a highly-correlated inverse
+    relationship, which also makes total sense. The more a song skews
+    towards being acoustic, the less energy value it tends to have.  
+    We noticed similar inverse relationship between ‘Loudness’ and
+    ‘acousticness’ as well.
+
+Let’s sort the the data by popularity to check the top 10 popular songs.
+
+``` r
+tracks1 %>% top_n(10,popularity) %>% select(artist_name, track_name, popularity) %>% arrange(desc(popularity))
+```
+
+    ## # A tibble: 19 x 3
+    ##    artist_name   track_name                                    popularity
+    ##    <chr>         <chr>                                              <dbl>
+    ##  1 Ariana Grande 7 rings                                              100
+    ##  2 Ariana Grande 7 rings                                              100
+    ##  3 Ariana Grande break up with your girlfriend, i'm bored              99
+    ##  4 Post Malone   Wow.                                                  99
+    ##  5 Ariana Grande break up with your girlfriend, i'm bored              99
+    ##  6 Post Malone   Wow.                                                  99
+    ##  7 Daddy Yankee  Con Calma                                             98
+    ##  8 Daddy Yankee  Con Calma                                             98
+    ##  9 Daddy Yankee  Con Calma                                             98
+    ## 10 Halsey        Without Me                                            97
+    ## 11 Ava Max       Sweet but Psycho                                      97
+    ## 12 Post Malone   Sunflower - Spider-Man: Into the Spider-Verse         97
+    ## 13 Halsey        Without Me                                            97
+    ## 14 Post Malone   Sunflower - Spider-Man: Into the Spider-Verse         97
+    ## 15 Halsey        Without Me                                            97
+    ## 16 Sam Smith     Dancing With A Stranger (with Normani)                97
+    ## 17 Marshmello    Happier                                               97
+    ## 18 Ava Max       Sweet but Psycho                                      97
+    ## 19 Pedro Capó    Calma - Remix                                         97
+
+## Correlation coefficient for each feature
+
+Now that we have plotted the correlation heat map, let’s check the
+correlation coefficient values against each relationship.
+
+``` r
+# Eliminate the parameters which are not relevant to our correlation analysis and copy the same in a new df. 
+
+tracks2 <- tracks %>% select(-c(track_id,time_signature,key,mode))
+
+cor(tracks2[,4:14])
+```
+
+    ##                   popularity acousticness danceability duration_ms      energy
+    ## popularity        1.00000000  -0.38129531   0.25656447  0.00234802  0.24892177
+    ## acousticness     -0.38129531   1.00000000  -0.36454559  0.01120296 -0.72557636
+    ## danceability      0.25656447  -0.36454559   1.00000000 -0.12578071  0.32580699
+    ## duration_ms       0.00234802   0.01120296  -0.12578071  1.00000000 -0.03054981
+    ## energy            0.24892177  -0.72557636   0.32580699 -0.03054981  1.00000000
+    ## instrumentalness -0.21098311   0.31615411  -0.36494121  0.07602064 -0.37895695
+    ## liveness         -0.16799519   0.06900353  -0.04168384  0.02378262  0.19280086
+    ## loudness          0.36301074  -0.69020168   0.43866848 -0.04761783  0.81608797
+    ## speechiness      -0.15107582   0.15093494   0.13455996 -0.01617141  0.14511980
+    ## tempo             0.08103891  -0.23824736   0.02193911 -0.02845610  0.22877413
+    ## valence           0.06007629  -0.32579820   0.54715402 -0.14181119  0.43677118
+    ##                  instrumentalness    liveness     loudness  speechiness
+    ## popularity            -0.21098311 -0.16799519  0.363010736 -0.151075818
+    ## acousticness           0.31615411  0.06900353 -0.690201678  0.150934938
+    ## danceability          -0.36494121 -0.04168384  0.438668484  0.134559958
+    ## duration_ms            0.07602064  0.02378262 -0.047617826 -0.016171409
+    ## energy                -0.37895695  0.19280086  0.816087967  0.145119802
+    ## instrumentalness       1.00000000 -0.13419771 -0.506320170 -0.177147448
+    ## liveness              -0.13419771  1.00000000  0.045685710  0.510146517
+    ## loudness              -0.50632017  0.04568571  1.000000000 -0.002272769
+    ## speechiness           -0.17714745  0.51014652 -0.002272769  1.000000000
+    ## tempo                 -0.10413303 -0.05135460  0.228363652 -0.081540541
+    ## valence               -0.30752185  0.01180437  0.399901355  0.023841622
+    ##                        tempo     valence
+    ## popularity        0.08103891  0.06007629
+    ## acousticness     -0.23824736 -0.32579820
+    ## danceability      0.02193911  0.54715402
+    ## duration_ms      -0.02845610 -0.14181119
+    ## energy            0.22877413  0.43677118
+    ## instrumentalness -0.10413303 -0.30752185
+    ## liveness         -0.05135460  0.01180437
+    ## loudness          0.22836365  0.39990136
+    ## speechiness      -0.08154054  0.02384162
+    ## tempo             1.00000000  0.13485723
+    ## valence           0.13485723  1.00000000
+
+With our dependent variable being ‘popularity’, from above graph we can
+note that there are poor correlation values across most of our
+independent variables.  
+From this correlation matrix, we can pluck five of the best features
+(ones with the highest correlation) to use later on as predictors while
+training our model -  
+acousticness,  
+danceability,  
+energy,  
+instrumentalness, and  
+loudness.
+
+## Popularity for each key
+
+Now let’s compare Popularity with Key and check if we can find any
+significant relationship between these two attributes.
+
+So when it comes to western music, there are 12 keys. Let’s check the
+popularity for each and every key.
+
+``` r
+# Plot keys and their popularity values.
+
+tracks %>% group_by(key) %>% select(key, popularity) %>%
+  ggplot(aes(x=as.factor(key),y=popularity,fill=as.factor(key))) +
+  geom_boxplot() + theme(legend.position = "none") +
+  labs(title="Popularity of Song Keys",
+       x="Key", y="Popularity")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+There seems to be little differentiation between the keys and
+popularity. However, one key does seem to have a larger number of
+popular songs in it - C-Sharp key.
+
+We can check this by filtering out songs where popularity is above 70 on
+a scale on 100 and check how many popular songs fall under this key.
+
+``` r
+#tracks %>% filter(popularity > 70) %>% group_by(key) %>% summarize(count = n()) %>% arrange(desc(count))
+```
+
+Key 1 (which applies to c-Sharp) has more popular songs (1068 songs)
+than other keys. This could be a potential predictor variable, so we
+will encode a new binary variable we can use in our model.
+
+``` r
+#  Creating a new binary variable for key attribute
+
+tracks$isKey1 <- as.integer(tracks$key == 1)
+```
+
+## Linear Regression Modelling
+
+To warm-up, we will be starting with a simple linear regression model
+and try and manipulate the predictor attributes to find the a model with
+lowest Residual standard error and highest Adjusted R-squared.
+
+Linear Model 1 (m1):
+
+Dependent Variable - Popularity  
+Predictor Variables - acousticness danceability, energy,
+instrumentalness, liveness, loudness, speechiness, tempo, valence,
+isKey1, energy and loudness.
+
+``` r
+m1 <- lm(popularity ~ acousticness + danceability + energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + isKey1 + (energy * loudness), data=tracks)
+
+summary(m1)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = popularity ~ acousticness + danceability + energy + 
+    ##     instrumentalness + liveness + loudness + speechiness + tempo + 
+    ##     valence + isKey1 + (energy * loudness), data = tracks)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -58.073 -10.190   1.449  11.049  56.127 
+    ## 
+    ## Coefficients: (1 not defined because of singularities)
+    ##                    Estimate Std. Error t value             Pr(>|t|)    
+    ## (Intercept)       55.786296   0.336716 165.678 < 0.0000000000000002 ***
+    ## acousticness     -12.008112   0.154651 -77.647 < 0.0000000000000002 ***
+    ## danceability      17.896007   0.244464  73.205 < 0.0000000000000002 ***
+    ## energy            -4.695025   0.304857 -15.401 < 0.0000000000000002 ***
+    ## instrumentalness  -4.247604   0.133015 -31.933 < 0.0000000000000002 ***
+    ## liveness          -9.481621   0.201964 -46.947 < 0.0000000000000002 ***
+    ## loudness           0.683820   0.012004  56.967 < 0.0000000000000002 ***
+    ## speechiness       -7.807189   0.233538 -33.430 < 0.0000000000000002 ***
+    ## tempo             -0.004373   0.001118  -3.912   0.0000915725170060 ***
+    ## valence          -13.297562   0.165468 -80.363 < 0.0000000000000002 ***
+    ## isKey1                   NA         NA      NA                   NA    
+    ## energy:loudness    0.180617   0.023932   7.547   0.0000000000000447 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 15.92 on 232714 degrees of freedom
+    ## Multiple R-squared:  0.2339, Adjusted R-squared:  0.2338 
+    ## F-statistic:  7104 on 10 and 232714 DF,  p-value: < 0.00000000000000022
+
+From above model, we can observe that the Adjusted R-squared is very low
+and the Residual standard error is on the higher end for this model.  
+Also, the key attribute is not adding up to anything in our model.
+
+In our next modelling attempt, let’s get rid of the key attribute and
+add couple of more parameters which have shown correlation among them.
+
+Linear Model 2 (m2):
+
+Dependent Variable - Popularity  
+Predictor Variables - acousticness danceability, energy,
+instrumentalness, liveness, loudness, speechiness, tempo, valence,
+energy and loudness, acousticness and instrumentalness.
+
+In this model, we have added an additional predictor acousticness and
+instrumentalness.
+
+``` r
+m2 <- lm(popularity ~ acousticness + danceability + energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + (energy * loudness) + (acousticness * instrumentalness), data=tracks)
+
+summary(m2)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = popularity ~ acousticness + danceability + energy + 
+    ##     instrumentalness + liveness + loudness + speechiness + tempo + 
+    ##     valence + (energy * loudness) + (acousticness * instrumentalness), 
+    ##     data = tracks)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -58.721  -9.951   1.316  10.908  56.072 
+    ## 
+    ## Coefficients:
+    ##                                 Estimate Std. Error t value
+    ## (Intercept)                    58.290825   0.336710 173.119
+    ## acousticness                  -15.002658   0.161330 -92.994
+    ## danceability                   18.052361   0.242599  74.412
+    ## energy                         -7.971595   0.307375 -25.934
+    ## instrumentalness              -14.202184   0.211638 -67.106
+    ## liveness                       -8.856882   0.200681 -44.134
+    ## loudness                        0.867896   0.012298  70.572
+    ## speechiness                    -7.403721   0.231840 -31.935
+    ## tempo                          -0.003738   0.001109  -3.369
+    ## valence                       -13.573857   0.164261 -82.636
+    ## energy:loudness                -0.252460   0.024815 -10.174
+    ## acousticness:instrumentalness  18.970531   0.315269  60.173
+    ##                                           Pr(>|t|)    
+    ## (Intercept)                   < 0.0000000000000002 ***
+    ## acousticness                  < 0.0000000000000002 ***
+    ## danceability                  < 0.0000000000000002 ***
+    ## energy                        < 0.0000000000000002 ***
+    ## instrumentalness              < 0.0000000000000002 ***
+    ## liveness                      < 0.0000000000000002 ***
+    ## loudness                      < 0.0000000000000002 ***
+    ## speechiness                   < 0.0000000000000002 ***
+    ## tempo                                     0.000755 ***
+    ## valence                       < 0.0000000000000002 ***
+    ## energy:loudness               < 0.0000000000000002 ***
+    ## acousticness:instrumentalness < 0.0000000000000002 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 15.8 on 232713 degrees of freedom
+    ## Multiple R-squared:  0.2456, Adjusted R-squared:  0.2456 
+    ## F-statistic:  6888 on 11 and 232713 DF,  p-value: < 0.00000000000000022
+
+In above model, we can see that the Adjusted R-squared is has increased
+from 0.2338 to 0.2456 and the Residual standard error has decreased from
+15.92 to 15.8.  
+However, the updated Adjusted R-squared is still quite low.
+
+Let’s try and improve the model further by adding for correlation
+predictors.
+
+Linear Model 3 (m3):
+
+Dependent Variable - Popularity  
+Predictor Variables - acousticness danceability, energy,
+instrumentalness, liveness, loudness, speechiness, tempo, valence,
+energy and loudness, acousticness and instrumentalness, energy and
+danceability.
+
+In this model, we have added an additional predictor energy and
+danceability.
+
+``` r
+m3 <- lm(popularity ~ acousticness + danceability + energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + (energy * loudness) + (acousticness * instrumentalness) + (energy * danceability), data=tracks)
+
+summary(m3)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = popularity ~ acousticness + danceability + energy + 
+    ##     instrumentalness + liveness + loudness + speechiness + tempo + 
+    ##     valence + (energy * loudness) + (acousticness * instrumentalness) + 
+    ##     (energy * danceability), data = tracks)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -59.368  -9.970   1.293  10.917  56.801 
+    ## 
+    ## Coefficients:
+    ##                                  Estimate  Std. Error t value
+    ## (Intercept)                    62.3343933   0.4171325 149.435
+    ## acousticness                  -15.1516901   0.1614924 -93.823
+    ## danceability                   11.0487426   0.4909714  22.504
+    ## energy                        -16.0219339   0.5789554 -27.674
+    ## instrumentalness              -14.1442256   0.2115453 -66.861
+    ## liveness                       -8.7826321   0.2006162 -43.778
+    ## loudness                        0.9388640   0.0130301  72.053
+    ## speechiness                    -7.1087332   0.2324033 -30.588
+    ## tempo                          -0.0009986   0.0011213  -0.891
+    ## valence                       -13.5071933   0.1642163 -82.252
+    ## energy:loudness                -0.3752865   0.0259063 -14.486
+    ## acousticness:instrumentalness  18.5180796   0.3162925  58.547
+    ## danceability:energy            12.8862781   0.7855224  16.405
+    ##                                          Pr(>|t|)    
+    ## (Intercept)                   <0.0000000000000002 ***
+    ## acousticness                  <0.0000000000000002 ***
+    ## danceability                  <0.0000000000000002 ***
+    ## energy                        <0.0000000000000002 ***
+    ## instrumentalness              <0.0000000000000002 ***
+    ## liveness                      <0.0000000000000002 ***
+    ## loudness                      <0.0000000000000002 ***
+    ## speechiness                   <0.0000000000000002 ***
+    ## tempo                                       0.373    
+    ## valence                       <0.0000000000000002 ***
+    ## energy:loudness               <0.0000000000000002 ***
+    ## acousticness:instrumentalness <0.0000000000000002 ***
+    ## danceability:energy           <0.0000000000000002 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 15.79 on 232712 degrees of freedom
+    ## Multiple R-squared:  0.2465, Adjusted R-squared:  0.2464 
+    ## F-statistic:  6344 on 12 and 232712 DF,  p-value: < 0.00000000000000022
+
+In above model, we can see that the Adjusted R-squared is has increased
+from 0.2456 to 0.2464 and the Residual standard error has decreased from
+15.8 to 15.79.
+
+We’ll chose the model m3 as it has the best fit (R-Squared) to the data
+compared to other models.
+
+Let’s plot model m3 using residual plot and QQ plot.
+
+``` r
+# Plotting residual plot for Model 3
+
+am3 <- augment(m3)
+
+am3 %>% ggplot(aes(x=.fitted,y=.resid)) +
+  geom_point(alpha=0.1) + geom_hline(yintercept=0) +
+  labs(title="Residual Plot")
+```
+
+![](README_files/figure-gfm/plotresidual-1.png)<!-- -->
+
+``` r
+# Plotting QQ plot for Model 3
+
+am3 %>% ggplot(aes(sample=.std.resid)) +
+  geom_qq() + geom_qq_line() +
+  labs(title="QQ Plot")
+```
+
+![](README_files/figure-gfm/plotQQ-1.png)<!-- -->
+
+The residual plot has a definite pattern however, the QQ plot shows that
+our residuals aren’t exactly normal throughout the range of samples.
+
+Given the low Adjusted R-squared, and unusual patterns in the residuals,
+the models we’ve created seem like they are unsuitable for predicting a
+song’s popularity on Spotify.
+
+## Sushma Akoju Code
+
+Goal :  
+We primarily focus and attempt to understand each of the features, their
+technical definitions cited here
+https://developer.spotify.com/documentation/web-api/reference/\#endpoint-get-audio-features
+. we would like to see how existing human notions about music fare
+against what data actually tells us about. For example, it has been
+widely popular that the C\# chord is most popular in western music. We
+want to find out how the features contribute to popularity.
+
+Example: “My favorite things” song from “The Sound of music” movie which
+was very popular back in 1960s and still considered a classic is
+unfortunately has a popularity score of zero while a modern,
+contemporary version inspired from the same song and rewritten with
+different lyrics and named as “7 rings” by Ariana Grande, has a
+popularity score of 100.
+
+##### check few quick summaries for dataframe
+
+``` r
+head(tracks)
+```
+
+    ## # A tibble: 6 x 19
     ##   genre artist_name  track_name   track_id  popularity acousticness danceability
-    ##   <chr> <chr>        <chr>        <chr>          <dbl>        <dbl>        <dbl>
+    ##   <fct> <chr>        <chr>        <chr>          <dbl>        <dbl>        <dbl>
     ## 1 Movie Henri Salva~ C'est beau ~ 0BRjO6ga~          0        0.611        0.389
     ## 2 Movie Martin & le~ Perdu d'ava~ 0BjC1Nfo~          1        0.246        0.59 
     ## 3 Movie Joseph Will~ Don't Let M~ 0CoSDzoN~          3        0.952        0.663
     ## 4 Movie Henri Salva~ Dis-moi Mon~ 0Gc6TVm5~          0        0.703        0.24 
     ## 5 Movie Fabien Nataf Ouverture    0IuslXpM~          4        0.95         0.331
     ## 6 Movie Henri Salva~ Le petit so~ 0Mf1jKa8~          0        0.749        0.578
-    ## # ... with 11 more variables: duration_ms <dbl>, energy <dbl>,
-    ## #   instrumentalness <dbl>, key <chr>, liveness <dbl>, loudness <dbl>,
-    ## #   mode <chr>, speechiness <dbl>, tempo <dbl>, time_signature <chr>,
-    ## #   valence <dbl>
+    ## # ... with 12 more variables: duration_ms <dbl>, energy <dbl>,
+    ## #   instrumentalness <dbl>, key <fct>, liveness <dbl>, loudness <dbl>,
+    ## #   mode <fct>, speechiness <dbl>, tempo <dbl>, time_signature <chr>,
+    ## #   valence <dbl>, isKey1 <int>
 
 ``` r
-glimpse(spotifydf)
+colSums(is.na(tracks))
+```
+
+    ##            genre      artist_name       track_name         track_id 
+    ##                0                0                0                0 
+    ##       popularity     acousticness     danceability      duration_ms 
+    ##                0                0                0                0 
+    ##           energy instrumentalness              key         liveness 
+    ##                0                0                0                0 
+    ##         loudness             mode      speechiness            tempo 
+    ##                0                0                0                0 
+    ##   time_signature          valence           isKey1 
+    ##                0                0                0
+
+``` r
+head( tracks)
+```
+
+    ## # A tibble: 6 x 19
+    ##   genre artist_name  track_name   track_id  popularity acousticness danceability
+    ##   <fct> <chr>        <chr>        <chr>          <dbl>        <dbl>        <dbl>
+    ## 1 Movie Henri Salva~ C'est beau ~ 0BRjO6ga~          0        0.611        0.389
+    ## 2 Movie Martin & le~ Perdu d'ava~ 0BjC1Nfo~          1        0.246        0.59 
+    ## 3 Movie Joseph Will~ Don't Let M~ 0CoSDzoN~          3        0.952        0.663
+    ## 4 Movie Henri Salva~ Dis-moi Mon~ 0Gc6TVm5~          0        0.703        0.24 
+    ## 5 Movie Fabien Nataf Ouverture    0IuslXpM~          4        0.95         0.331
+    ## 6 Movie Henri Salva~ Le petit so~ 0Mf1jKa8~          0        0.749        0.578
+    ## # ... with 12 more variables: duration_ms <dbl>, energy <dbl>,
+    ## #   instrumentalness <dbl>, key <fct>, liveness <dbl>, loudness <dbl>,
+    ## #   mode <fct>, speechiness <dbl>, tempo <dbl>, time_signature <chr>,
+    ## #   valence <dbl>, isKey1 <int>
+
+``` r
+glimpse(tracks)
 ```
 
     ## Rows: 232,725
-    ## Columns: 18
-    ## $ genre            <chr> "Movie", "Movie", "Movie", "Movie", "Movie", "Movie",~
+    ## Columns: 19
+    ## $ genre            <fct> Movie, Movie, Movie, Movie, Movie, Movie, Movie, Movi~
     ## $ artist_name      <chr> "Henri Salvador", "Martin & les fées", "Joseph Willia~
     ## $ track_name       <chr> "C'est beau de faire un Show", "Perdu d'avance (par G~
     ## $ track_id         <chr> "0BRjO6ga9RKCKjfDqeFgWV", "0BjC1NfoEOOusryehmNudP", "~
@@ -129,26 +924,27 @@ glimpse(spotifydf)
     ## $ duration_ms      <dbl> 99373, 137373, 170267, 152427, 82625, 160627, 212293,~
     ## $ energy           <dbl> 0.9100, 0.7370, 0.1310, 0.3260, 0.2250, 0.0948, 0.270~
     ## $ instrumentalness <dbl> 0.00000000, 0.00000000, 0.00000000, 0.00000000, 0.123~
-    ## $ key              <chr> "C#", "F#", "C", "C#", "F", "C#", "C#", "F#", "C", "G~
+    ## $ key              <fct> C#, F#, C, C#, F, C#, C#, F#, C, G, E, C, F#, D#, G, ~
     ## $ liveness         <dbl> 0.3460, 0.1510, 0.1030, 0.0985, 0.2020, 0.1070, 0.105~
     ## $ loudness         <dbl> -1.828, -5.559, -13.879, -12.178, -21.150, -14.970, -~
-    ## $ mode             <chr> "Major", "Minor", "Minor", "Major", "Major", "Major",~
+    ## $ mode             <fct> Major, Minor, Minor, Major, Major, Major, Major, Majo~
     ## $ speechiness      <dbl> 0.0525, 0.0868, 0.0362, 0.0395, 0.0456, 0.1430, 0.953~
     ## $ tempo            <dbl> 166.969, 174.003, 99.488, 171.758, 140.576, 87.479, 8~
     ## $ time_signature   <chr> "4/4", "4/4", "5/4", "4/4", "4/4", "4/4", "4/4", "4/4~
     ## $ valence          <dbl> 0.8140, 0.8160, 0.3680, 0.2270, 0.3900, 0.3580, 0.533~
+    ## $ isKey1           <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
 
 ## Including Plots
 
-##### Some genres are duplicated. (encoding mismatches).
+Some genres are duplicated. (encoding mismatches).
 
 ``` r
-na.omit(spotifydf)
+na.omit(tracks)
 ```
 
-    ## # A tibble: 232,725 x 18
+    ## # A tibble: 232,725 x 19
     ##    genre artist_name  track_name   track_id popularity acousticness danceability
-    ##    <chr> <chr>        <chr>        <chr>         <dbl>        <dbl>        <dbl>
+    ##    <fct> <chr>        <chr>        <chr>         <dbl>        <dbl>        <dbl>
     ##  1 Movie Henri Salva~ C'est beau ~ 0BRjO6g~          0      0.611          0.389
     ##  2 Movie Martin & le~ Perdu d'ava~ 0BjC1Nf~          1      0.246          0.59 
     ##  3 Movie Joseph Will~ Don't Let M~ 0CoSDzo~          3      0.952          0.663
@@ -159,32 +955,32 @@ na.omit(spotifydf)
     ##  8 Movie Laura Mayne  Let Me Let ~ 0PbIF9Y~         15      0.939          0.416
     ##  9 Movie Chorus       Helka        0ST6uPf~          0      0.00104        0.734
     ## 10 Movie Le Club des~ Les bisous ~ 0VSqZ3K~         10      0.319          0.598
-    ## # ... with 232,715 more rows, and 11 more variables: duration_ms <dbl>,
-    ## #   energy <dbl>, instrumentalness <dbl>, key <chr>, liveness <dbl>,
-    ## #   loudness <dbl>, mode <chr>, speechiness <dbl>, tempo <dbl>,
-    ## #   time_signature <chr>, valence <dbl>
+    ## # ... with 232,715 more rows, and 12 more variables: duration_ms <dbl>,
+    ## #   energy <dbl>, instrumentalness <dbl>, key <fct>, liveness <dbl>,
+    ## #   loudness <dbl>, mode <fct>, speechiness <dbl>, tempo <dbl>,
+    ## #   time_signature <chr>, valence <dbl>, isKey1 <int>
 
 ``` r
-genres <- distinct(spotifydf, genre)$genre
+genres <- distinct(tracks, genre)$genre
 genres
 ```
 
-    ##  [1] "Movie"            "R&B"              "A Capella"        "Alternative"     
-    ##  [5] "Country"          "Dance"            "Electronic"       "Anime"           
-    ##  [9] "Folk"             "Blues"            "Opera"            "Hip-Hop"         
-    ## [13] "Children's Music" "Children’s Music" "Rap"              "Indie"           
-    ## [17] "Classical"        "Pop"              "Reggae"           "Reggaeton"       
-    ## [21] "Jazz"             "Rock"             "Ska"              "Comedy"          
-    ## [25] "Soul"             "Soundtrack"       "World"
+    ##  [1] Movie           RB              A Capella       Alternative    
+    ##  [5] Country         Dance           Electronic      Anime          
+    ##  [9] Folk            Blues           Opera           HipHop         
+    ## [13] Childrens Music Rap             Indie           Classical      
+    ## [17] Pop             Reggae          Reggaeton       Jazz           
+    ## [21] Rock            Ska             Comedy          Soul           
+    ## [25] Soundtrack      World          
+    ## 26 Levels: A Capella Alternative Anime Blues Childrens Music ... World
 
 ``` r
-spotifydf$genre[spotifydf$genre=="Children's Music"] <- "Children’s Music"
-spotifydf[!duplicated(spotifydf$track_id),]
+tracks[!duplicated(tracks$track_id),]
 ```
 
-    ## # A tibble: 176,774 x 18
+    ## # A tibble: 176,774 x 19
     ##    genre artist_name  track_name   track_id popularity acousticness danceability
-    ##    <chr> <chr>        <chr>        <chr>         <dbl>        <dbl>        <dbl>
+    ##    <fct> <chr>        <chr>        <chr>         <dbl>        <dbl>        <dbl>
     ##  1 Movie Henri Salva~ C'est beau ~ 0BRjO6g~          0      0.611          0.389
     ##  2 Movie Martin & le~ Perdu d'ava~ 0BjC1Nf~          1      0.246          0.59 
     ##  3 Movie Joseph Will~ Don't Let M~ 0CoSDzo~          3      0.952          0.663
@@ -195,55 +991,57 @@ spotifydf[!duplicated(spotifydf$track_id),]
     ##  8 Movie Laura Mayne  Let Me Let ~ 0PbIF9Y~         15      0.939          0.416
     ##  9 Movie Chorus       Helka        0ST6uPf~          0      0.00104        0.734
     ## 10 Movie Le Club des~ Les bisous ~ 0VSqZ3K~         10      0.319          0.598
-    ## # ... with 176,764 more rows, and 11 more variables: duration_ms <dbl>,
-    ## #   energy <dbl>, instrumentalness <dbl>, key <chr>, liveness <dbl>,
-    ## #   loudness <dbl>, mode <chr>, speechiness <dbl>, tempo <dbl>,
-    ## #   time_signature <chr>, valence <dbl>
+    ## # ... with 176,764 more rows, and 12 more variables: duration_ms <dbl>,
+    ## #   energy <dbl>, instrumentalness <dbl>, key <fct>, liveness <dbl>,
+    ## #   loudness <dbl>, mode <fct>, speechiness <dbl>, tempo <dbl>,
+    ## #   time_signature <chr>, valence <dbl>, isKey1 <int>
 
 ``` r
-genres <- distinct(spotifydf, genre)$genre
+genres <- distinct(tracks, genre)$genre
 ```
 
-##### Convert character format columns: key and mode to numeric values.
+Convert character format columns: key and mode to numeric values.
 
 ``` r
-unique(spotifydf$key)
+unique(tracks$key)
 ```
 
-    ##  [1] "C#" "F#" "C"  "F"  "G"  "E"  "D#" "G#" "D"  "A#" "A"  "B"
+    ##  [1] C# F# C  F  G  E  D# G# D  A# A  B 
+    ## Levels: A A# B C C# D D# E F F# G G#
 
 ``` r
-unique(as.numeric(as.factor(spotifydf$key)))
+unique(as.numeric(as.factor(tracks$key)))
 ```
 
     ##  [1]  5 10  4  9 11  8  7 12  6  2  1  3
 
 ``` r
-spotifydf$key <- as.numeric(as.factor(spotifydf$key))
+tracks$key <- as.numeric(as.factor(tracks$key))
 
-unique(spotifydf$mode)
+unique(tracks$mode)
 ```
 
-    ## [1] "Major" "Minor"
+    ## [1] Major Minor
+    ## Levels: Major Minor
 
 ``` r
-unique(as.numeric(as.factor(spotifydf$mode)))
+unique(as.numeric(as.factor(tracks$mode)))
 ```
 
     ## [1] 1 2
 
 ``` r
-spotifydf$mode <- as.numeric(as.factor(spotifydf$mode))
+tracks$mode <- as.numeric(as.factor(tracks$mode))
 ```
 
-##### Get all numeric columns from the dataframe.
+Get all numeric columns from the dataframe.
 
 ``` r
-str(spotifydf)
+str(tracks)
 ```
 
-    ## spec_tbl_df [232,725 x 18] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
-    ##  $ genre           : chr [1:232725] "Movie" "Movie" "Movie" "Movie" ...
+    ## spec_tbl_df [232,725 x 19] (S3: spec_tbl_df/tbl_df/tbl/data.frame)
+    ##  $ genre           : Factor w/ 26 levels "A Capella","Alternative",..: 15 15 15 15 15 15 15 15 15 15 ...
     ##  $ artist_name     : chr [1:232725] "Henri Salvador" "Martin & les fées" "Joseph Williams" "Henri Salvador" ...
     ##  $ track_name      : chr [1:232725] "C'est beau de faire un Show" "Perdu d'avance (par Gad Elmaleh)" "Don't Let Me Be Lonely Tonight" "Dis-moi Monsieur Gordon Cooper" ...
     ##  $ track_id        : chr [1:232725] "0BRjO6ga9RKCKjfDqeFgWV" "0BjC1NfoEOOusryehmNudP" "0CoSDzoNIKCRs124s9uTVy" "0Gc6TVm52BwZD07Ki6tIvf" ...
@@ -261,6 +1059,7 @@ str(spotifydf)
     ##  $ tempo           : num [1:232725] 167 174 99.5 171.8 140.6 ...
     ##  $ time_signature  : chr [1:232725] "4/4" "4/4" "5/4" "4/4" ...
     ##  $ valence         : num [1:232725] 0.814 0.816 0.368 0.227 0.39 0.358 0.533 0.274 0.765 0.718 ...
+    ##  $ isKey1          : int [1:232725] 0 0 0 0 0 0 0 0 0 0 ...
     ##  - attr(*, "spec")=
     ##   .. cols(
     ##   ..   genre = col_character(),
@@ -285,7 +1084,7 @@ str(spotifydf)
     ##  - attr(*, "problems")=<externalptr>
 
 ``` r
-columns <- colnames(spotifydf)
+columns <- colnames(tracks)
 columns
 ```
 
@@ -293,10 +1092,10 @@ columns
     ##  [5] "popularity"       "acousticness"     "danceability"     "duration_ms"     
     ##  [9] "energy"           "instrumentalness" "key"              "liveness"        
     ## [13] "loudness"         "mode"             "speechiness"      "tempo"           
-    ## [17] "time_signature"   "valence"
+    ## [17] "time_signature"   "valence"          "isKey1"
 
 ``` r
-numeric_columns <- unlist(lapply(spotifydf, is.numeric))
+numeric_columns <- unlist(lapply(tracks, is.numeric))
 numeric_columns
 ```
 
@@ -308,11 +1107,11 @@ numeric_columns
     ##             TRUE             TRUE             TRUE             TRUE 
     ##         loudness             mode      speechiness            tempo 
     ##             TRUE             TRUE             TRUE             TRUE 
-    ##   time_signature          valence 
-    ##            FALSE             TRUE
+    ##   time_signature          valence           isKey1 
+    ##            FALSE             TRUE             TRUE
 
 ``` r
-numeric_spotifydf <- spotifydf[,numeric_columns]
+numeric_spotifydf <- tracks[,numeric_columns] %>% select (-c(isKey1))
 colnames(numeric_spotifydf)
 ```
 
@@ -321,78 +1120,36 @@ colnames(numeric_spotifydf)
     ##  [9] "loudness"         "mode"             "speechiness"      "tempo"           
     ## [13] "valence"
 
-##### Use Corrr library to plot correlation based on feature groups.
+## Correlation based on feature groups
 
-##### Found this library more helpful to group into clusters for higher or similar correlation between features.
+Use Corrplot and stats library to plot correlation based on feature
+groups, numeric plots.
 
-``` r
-corr_df <- correlate(numeric_spotifydf, quiet = TRUE)
-corr_df
-```
-
-    ## # A tibble: 13 x 14
-    ##    term             popularity acousticness danceability duration_ms  energy
-    ##    <chr>                 <dbl>        <dbl>        <dbl>       <dbl>   <dbl>
-    ##  1 popularity        NA             -0.381       0.257       0.00235  0.249 
-    ##  2 acousticness      -0.381         NA          -0.365       0.0112  -0.726 
-    ##  3 danceability       0.257         -0.365      NA          -0.126    0.326 
-    ##  4 duration_ms        0.00235        0.0112     -0.126      NA       -0.0305
-    ##  5 energy             0.249         -0.726       0.326      -0.0305  NA     
-    ##  6 instrumentalness  -0.211          0.316      -0.365       0.0760  -0.379 
-    ##  7 key               -0.000943       0.0143     -0.00700    -0.00351 -0.0104
-    ##  8 liveness          -0.168          0.0690     -0.0417      0.0238   0.193 
-    ##  9 loudness           0.363         -0.690       0.439      -0.0476   0.816 
-    ## 10 mode               0.0706        -0.0559      0.0619      0.0116   0.0413
-    ## 11 speechiness       -0.151          0.151       0.135      -0.0162   0.145 
-    ## 12 tempo              0.0810        -0.238       0.0219     -0.0285   0.229 
-    ## 13 valence            0.0601        -0.326       0.547      -0.142    0.437 
-    ## # ... with 8 more variables: instrumentalness <dbl>, key <dbl>, liveness <dbl>,
-    ## #   loudness <dbl>, mode <dbl>, speechiness <dbl>, tempo <dbl>, valence <dbl>
+Found this library more helpful to group into clusters for higher or
+similar correlation between features.
 
 ``` r
-corr_df %>% 
-  select(-term) %>% 
-  map_dbl(~ mean(., na.rm = TRUE))
-```
-
-    ##       popularity     acousticness     danceability      duration_ms 
-    ##      0.014184858     -0.184994439      0.073552896     -0.022415605 
-    ##           energy instrumentalness              key         liveness 
-    ##      0.107507980     -0.145097040     -0.006138012      0.036819088 
-    ##         loudness             mode      speechiness            tempo 
-    ##      0.088582298      0.012430743      0.046871552      0.014349281 
-    ##          valence 
-    ##      0.069672654
-
-``` r
-corr_df2 <- cor(numeric_spotifydf)
+corr_df2 <- stats::cor(numeric_spotifydf)
 col3 = hcl.colors(10, "YlOrRd", rev = TRUE)
-corr1 <- corrplot(corr_df2, col=col3, method = 'number') 
+corr1 <- corrplot(corr_df2, col=col3, method = 'number')
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+There is a high correlation between energy and loudness features and
+similarly there is a second highest correlation between valence and
+danceability where valence is positiveness or negativeness of a track
+defined by (cheerful vs sad, depressive tune, lyrics)
+
+## Spotify tracks by Genre in the US
+
+For each feature, plot grouping w.r.t Popularity.
 
 ``` r
-corrplot(corr_df2,  order = 'hclust', addrect = 2)
-```
-
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
-
-``` r
-corrplot(corr_df2/2, col.lim=c(-0.5, 0.5))
-```
-
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
-
-##### There is a high correlation between energy and loudness features and similarly there is a second highest correlation between valence and danceability where valence is positiveness or negativeness of a track defined by (cheerful vs sad, depressive tune, lyrics)
-
-##### For each feature, plot grouping w.r.t Popularity.
-
-``` r
-genres_df <- spotifydf %>%
+genres_df <- tracks %>%
    select(popularity, genre)%>%
     count(popularity, genre)
-by_genres <- spotifydf %>% group_by(genre, popularity)
+by_genres <- tracks %>% group_by(genre, popularity)
 by_genres %>% summarise(
   popularity = mean(popularity),
 )
@@ -403,7 +1160,7 @@ by_genres %>% summarise(
     ## # A tibble: 1,802 x 2
     ## # Groups:   genre [26]
     ##    genre     popularity
-    ##    <chr>          <dbl>
+    ##    <fct>          <dbl>
     ##  1 A Capella          0
     ##  2 A Capella          1
     ##  3 A Capella          2
@@ -427,18 +1184,18 @@ by_genre %>% summarise(n = sum(n)) %>% filter(n>0)
 ```
 
     ## # A tibble: 26 x 2
-    ##    genre                n
-    ##    <chr>            <int>
-    ##  1 A Capella          119
-    ##  2 Alternative       9263
-    ##  3 Anime             8936
-    ##  4 Blues             9023
-    ##  5 Children’s Music 14756
-    ##  6 Classical         9256
-    ##  7 Comedy            9681
-    ##  8 Country           8664
-    ##  9 Dance             8701
-    ## 10 Electronic        9377
+    ##    genre               n
+    ##    <fct>           <int>
+    ##  1 A Capella         119
+    ##  2 Alternative      9263
+    ##  3 Anime            8936
+    ##  4 Blues            9023
+    ##  5 Childrens Music 14756
+    ##  6 Classical        9256
+    ##  7 Comedy           9681
+    ##  8 Country          8664
+    ##  9 Dance            8701
+    ## 10 Electronic       9377
     ## # ... with 16 more rows
 
 ``` r
@@ -453,14 +1210,14 @@ ggplot(genres_df)+
   geom_point(aes(x = genre, y= n))
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 genres_df %>% ggplot(aes(x = genre, y= n))+
   geom_line(aes(color = "genre")) 
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
 
 ``` r
 ggplot(data=by_genre,aes(x = genre, y = n, fill=genre)) +
@@ -469,16 +1226,23 @@ coord_flip()+
     labs(title = "Spotify tracks by Genre in US", y= NULL)
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-3.png)<!-- -->
 
-##### Group by Genres and select all features except text based features.
+Group by Genres and select all features except text based features.
 
 ``` r
-genres_df <- spotifydf %>%
+genres_df <- tracks %>%
   select(-c(artist_name, track_name, track_id, time_signature, key))
 ```
 
-##### Each of features do seem to have different types of density, suggesting distributions are different from each other. It would have been nice if some normalization technique or re-sampling of features was done. But in the interest of time, we could not do this. From the above density plots, it would be reaosnable to find some kind of normalization between feature data.
+## Data summary and density distribution for all spotify features
+
+Each of features do seem to have different types of density, suggesting
+distributions are different from each other. It would have been nice if
+some normalization technique or re-sampling of features was done. But in
+the interest of time, we could not do this. From the above density
+plots, it would be reasonable to find some kind of normalization between
+feature data.
 
 ``` r
 spotify_summary <- datasummary_skim(numeric_spotifydf)
@@ -553,7 +1317,7 @@ popularity
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.78" y="8.06" width="2.22" height="3.61" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="4.00" y="10.12" width="2.22" height="1.54" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="6.22" y="9.07" width="2.22" height="2.59" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.44" y="8.81" width="2.22" height="2.85" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.67" y="7.28" width="2.22" height="4.39" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.89" y="5.68" width="2.22" height="5.98" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.11" y="5.11" width="2.22" height="6.55" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.33" y="4.83" width="2.22" height="6.83" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.56" y="4.29" width="2.22" height="7.37" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.78" y="3.39" width="2.22" height="8.28" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.00" y="3.22" width="2.22" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.22" y="4.74" width="2.22" height="6.92" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.44" y="6.57" width="2.22" height="5.09" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.67" y="8.60" width="2.22" height="3.06" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.89" y="10.16" width="2.22" height="1.50" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.11" y="11.02" width="2.22" height="0.64" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.33" y="11.45" width="2.22" height="0.22" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.56" y="11.59" width="2.22" height="0.072" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.78" y="11.64" width="2.22" height="0.026" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.00" y="11.65" width="2.22" height="0.0088" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -595,7 +1359,7 @@ acousticness
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.78" y="3.22" width="2.23" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="4.01" y="9.06" width="2.23" height="2.61" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="6.24" y="9.83" width="2.23" height="1.83" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.47" y="10.21" width="2.23" height="1.45" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.70" y="10.45" width="2.23" height="1.21" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.93" y="10.64" width="2.23" height="1.03" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.16" y="10.75" width="2.23" height="0.91" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.40" y="10.86" width="2.23" height="0.81" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.63" y="10.92" width="2.23" height="0.74" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.86" y="10.97" width="2.23" height="0.69" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.09" y="11.00" width="2.23" height="0.66" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.32" y="11.03" width="2.23" height="0.64" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.55" y="11.00" width="2.23" height="0.66" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.78" y="10.98" width="2.23" height="0.68" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="33.01" y="10.88" width="2.23" height="0.78" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.24" y="10.73" width="2.23" height="0.93" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.48" y="10.59" width="2.23" height="1.08" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.71" y="10.47" width="2.23" height="1.19" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.94" y="10.28" width="2.23" height="1.38" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.17" y="9.14" width="2.23" height="2.53" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -637,7 +1401,7 @@ danceability
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.45" y="10.94" width="2.38" height="0.73" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="3.83" y="10.55" width="2.38" height="1.11" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="6.22" y="9.70" width="2.38" height="1.96" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.60" y="9.45" width="2.38" height="2.21" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.99" y="9.01" width="2.38" height="2.65" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="13.37" y="8.34" width="2.38" height="3.32" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.75" y="7.35" width="2.38" height="4.32" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="18.14" y="6.15" width="2.38" height="5.52" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="20.52" y="4.84" width="2.38" height="6.83" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="22.91" y="3.65" width="2.38" height="8.01" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="25.29" y="3.22" width="2.38" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="27.67" y="3.32" width="2.38" height="8.34" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.06" y="3.71" width="2.38" height="7.95" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.44" y="4.86" width="2.38" height="6.80" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="34.83" y="6.26" width="2.38" height="5.40" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.21" y="8.11" width="2.38" height="3.56" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.59" y="9.67" width="2.38" height="1.99" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.98" y="10.86" width="2.38" height="0.80" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.36" y="11.54" width="2.38" height="0.13" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -679,7 +1443,7 @@ duration\_ms
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.65" y="3.22" width="4.01" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="5.67" y="11.50" width="4.01" height="0.16" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="9.68" y="11.65" width="4.01" height="0.010" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="13.69" y="11.66" width="4.01" height="0.0020" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.71" y="11.66" width="4.01" height="0.0011" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.72" y="11.66" width="4.01" height="0.00070" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="25.73" y="11.66" width="4.01" height="0.0010" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="29.75" y="11.66" width="4.01" height="0.00056" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="33.76" y="11.66" width="4.01" height="0.00019" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.77" y="11.66" width="4.01" height="0.00019" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.78" y="11.66" width="4.01" height="0.000037" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="45.80" y="11.66" width="4.01" height="0.000037" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -721,7 +1485,7 @@ energy
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.78" y="7.92" width="2.22" height="3.74" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="4.00" y="8.14" width="2.22" height="3.53" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="6.23" y="8.11" width="2.22" height="3.56" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.45" y="8.13" width="2.22" height="3.53" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.67" y="8.18" width="2.22" height="3.48" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.90" y="7.75" width="2.22" height="3.91" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.12" y="7.30" width="2.22" height="4.36" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.35" y="6.79" width="2.22" height="4.87" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.57" y="5.93" width="2.22" height="5.73" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.80" y="4.90" width="2.22" height="6.76" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.02" y="4.54" width="2.22" height="7.12" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.25" y="4.12" width="2.22" height="7.55" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.47" y="3.86" width="2.22" height="7.80" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.70" y="3.22" width="2.22" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.92" y="3.30" width="2.22" height="8.36" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.14" y="4.05" width="2.22" height="7.62" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.37" y="3.80" width="2.22" height="7.86" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.59" y="4.12" width="2.22" height="7.54" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.82" y="4.74" width="2.22" height="6.92" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.04" y="6.72" width="2.22" height="4.94" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -763,7 +1527,7 @@ instrumentalness
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.78" y="3.22" width="2.22" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="4.00" y="11.41" width="2.22" height="0.25" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="6.23" y="11.51" width="2.22" height="0.15" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.45" y="11.55" width="2.22" height="0.11" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.68" y="11.58" width="2.22" height="0.083" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.90" y="11.58" width="2.22" height="0.077" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.12" y="11.59" width="2.22" height="0.073" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.35" y="11.60" width="2.22" height="0.065" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.57" y="11.60" width="2.22" height="0.064" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.80" y="11.60" width="2.22" height="0.063" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.02" y="11.59" width="2.22" height="0.067" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.25" y="11.59" width="2.22" height="0.068" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.47" y="11.58" width="2.22" height="0.078" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.70" y="11.57" width="2.22" height="0.091" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.92" y="11.56" width="2.22" height="0.10" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.14" y="11.52" width="2.22" height="0.15" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.37" y="11.44" width="2.22" height="0.22" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.59" y="11.27" width="2.22" height="0.39" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.82" y="11.22" width="2.22" height="0.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.04" y="11.54" width="2.22" height="0.13" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -805,7 +1569,7 @@ key
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.78" y="4.72" width="2.02" height="6.94" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="3.80" y="6.91" width="2.02" height="4.75" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="5.82" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="7.84" y="6.26" width="2.02" height="5.41" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="9.86" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="11.88" y="3.22" width="2.02" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="13.90" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.92" y="4.56" width="2.02" height="7.10" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.94" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.96" y="4.29" width="2.02" height="7.37" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.98" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.00" y="9.35" width="2.02" height="2.32" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.02" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.04" y="6.34" width="2.02" height="5.32" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.06" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.08" y="5.45" width="2.02" height="6.21" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="34.10" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="36.12" y="7.00" width="2.02" height="4.66" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="38.14" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="40.16" y="3.58" width="2.02" height="8.08" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="42.18" y="11.66" width="2.02" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.20" y="7.02" width="2.02" height="4.64" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -847,7 +1611,7 @@ liveness
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.34" y="11.11" width="2.24" height="0.55" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="3.59" y="4.52" width="2.24" height="7.14" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="5.83" y="3.22" width="2.24" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.08" y="8.97" width="2.24" height="2.70" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.32" y="10.00" width="2.24" height="1.66" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.56" y="10.24" width="2.24" height="1.42" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="14.81" y="10.10" width="2.24" height="1.57" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.05" y="10.62" width="2.24" height="1.04" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.30" y="11.25" width="2.24" height="0.42" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.54" y="11.38" width="2.24" height="0.29" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="23.78" y="11.42" width="2.24" height="0.24" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.03" y="11.43" width="2.24" height="0.23" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.27" y="11.39" width="2.24" height="0.27" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.51" y="11.26" width="2.24" height="0.40" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.76" y="11.33" width="2.24" height="0.33" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.00" y="11.45" width="2.24" height="0.21" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.25" y="11.48" width="2.24" height="0.19" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.49" y="11.44" width="2.24" height="0.23" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.73" y="11.38" width="2.24" height="0.28" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="43.98" y="11.44" width="2.24" height="0.23" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -889,7 +1653,7 @@ loudness
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="-0.23" y="11.66" width="3.95" height="0.000076" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="3.72" y="11.66" width="3.95" height="0.0011" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="7.67" y="11.65" width="3.95" height="0.010" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="11.63" y="11.62" width="3.95" height="0.045" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.58" y="11.53" width="3.95" height="0.14" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.54" y="11.30" width="3.95" height="0.36" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="23.49" y="10.91" width="3.95" height="0.75" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="27.45" y="10.26" width="3.95" height="1.40" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="31.40" y="8.41" width="3.95" height="3.26" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.35" y="3.22" width="3.95" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.31" y="8.29" width="3.95" height="3.37" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="43.26" y="11.66" width="3.95" height="0.0070" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -931,7 +1695,7 @@ mode
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.78" y="3.22" width="2.22" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="4.00" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="6.22" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.44" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.67" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.89" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.11" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.33" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.56" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.78" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.00" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.22" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.44" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.67" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.89" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.11" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.33" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.56" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.78" y="11.66" width="2.22" height="0.00" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.00" y="7.16" width="2.22" height="4.51" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -973,7 +1737,7 @@ speechiness
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="0.73" y="3.22" width="2.35" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="3.09" y="7.59" width="2.35" height="4.07" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="5.44" y="10.45" width="2.35" height="1.21" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="7.79" y="10.96" width="2.35" height="0.70" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.14" y="11.13" width="2.35" height="0.53" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.49" y="11.22" width="2.35" height="0.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="14.85" y="11.34" width="2.35" height="0.33" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.20" y="11.45" width="2.35" height="0.21" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.55" y="11.54" width="2.35" height="0.13" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.90" y="11.59" width="2.35" height="0.075" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.25" y="11.62" width="2.35" height="0.042" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.61" y="11.64" width="2.35" height="0.022" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.96" y="11.65" width="2.35" height="0.016" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="31.31" y="11.65" width="2.35" height="0.013" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="33.66" y="11.64" width="2.35" height="0.017" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="36.01" y="11.64" width="2.35" height="0.020" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="38.37" y="11.63" width="2.35" height="0.031" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="40.72" y="11.57" width="2.35" height="0.093" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="43.07" y="11.24" width="2.35" height="0.42" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="45.42" y="11.57" width="2.35" height="0.089" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -1015,7 +1779,7 @@ tempo
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.70" y="11.64" width="2.09" height="0.025" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="3.79" y="11.59" width="2.09" height="0.070" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="5.88" y="11.37" width="2.09" height="0.29" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="7.97" y="10.32" width="2.09" height="1.34" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.06" y="6.76" width="2.09" height="4.91" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.15" y="4.63" width="2.09" height="7.03" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="14.25" y="3.22" width="2.09" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="16.34" y="5.19" width="2.09" height="6.47" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="18.43" y="4.96" width="2.09" height="6.70" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="20.52" y="4.00" width="2.09" height="7.66" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="22.61" y="5.40" width="2.09" height="6.26" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.70" y="6.48" width="2.09" height="5.19" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.79" y="8.71" width="2.09" height="2.95" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.88" y="9.09" width="2.09" height="2.57" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.98" y="8.88" width="2.09" height="2.78" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="33.07" y="10.63" width="2.09" height="1.03" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.16" y="11.25" width="2.09" height="0.41" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.25" y="11.39" width="2.09" height="0.27" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.34" y="11.64" width="2.09" height="0.027" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.43" y="11.66" width="2.09" height="0.0022" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="43.52" y="11.66" width="2.09" height="0.0022" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="45.62" y="11.66" width="2.09" height="0.00028" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -1057,7 +1821,7 @@ valence
       stroke-miterlimit: 10.00;
     }
   </style>
-</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">
+</defs><rect width="100%" height="100%" style="stroke: none; fill: none;"></rect><defs><clipPath id="cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw"><rect x="0.00" y="0.00" width="48.00" height="12.00"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwwLjAwfDEyLjAw)">  
 </g><defs><clipPath id="cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw"><rect x="0.00" y="2.88" width="48.00" height="9.12"></rect></clipPath></defs><g clip-path="url(#cpMC4wMHw0OC4wMHwyLjg4fDEyLjAw)"><rect x="1.78" y="5.39" width="2.22" height="6.27" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="4.00" y="5.11" width="2.22" height="6.55" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="6.22" y="5.09" width="2.22" height="6.57" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="8.44" y="4.26" width="2.22" height="7.40" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="10.67" y="4.54" width="2.22" height="7.12" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="12.89" y="4.39" width="2.22" height="7.28" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="15.11" y="3.58" width="2.22" height="8.08" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="17.33" y="3.22" width="2.22" height="8.44" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="19.56" y="4.14" width="2.22" height="7.52" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="21.78" y="4.07" width="2.22" height="7.59" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="24.00" y="3.73" width="2.22" height="7.93" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="26.22" y="4.19" width="2.22" height="7.47" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="28.44" y="4.83" width="2.22" height="6.83" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="30.67" y="5.03" width="2.22" height="6.63" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="32.89" y="5.61" width="2.22" height="6.05" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="35.11" y="6.08" width="2.22" height="5.58" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="37.33" y="6.79" width="2.22" height="4.87" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="39.56" y="7.36" width="2.22" height="4.31" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="41.78" y="8.21" width="2.22" height="3.46" style="stroke-width: 0.38; fill: #000000;"></rect><rect x="44.00" y="9.10" width="2.22" height="2.56" style="stroke-width: 0.38; fill: #000000;"></rect></g>
 </svg>
 </td>
@@ -1065,7 +1829,7 @@ valence
 </tbody>
 </table>
 
-##### Plot the density distributions of each of features.
+Plot the density distributions of each of features.
 
 ``` r
 spotify_histograms <- numeric_spotifydf[,-c(4)]
@@ -1075,43 +1839,45 @@ plot_num(spotify_histograms)
     ## Warning: `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> =
     ## "none")` instead.
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
-ggplot(spotifydf, aes(popularity)) +
+ggplot(tracks, aes(popularity)) +
   geom_density()
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
 ``` r
-ggplot(spotifydf, aes(energy)) +
+ggplot(tracks, aes(energy)) +
   geom_density()
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-3.png)<!-- -->
 
 ``` r
-ggplot(spotifydf, aes(danceability)) +
+ggplot(tracks, aes(danceability)) +
   geom_density()
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-9-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-4.png)<!-- -->
 
 ``` r
-ggplot(spotifydf, aes(key)) +
+ggplot(tracks, aes(key)) +
   geom_density()
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-9-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-5.png)<!-- -->
 
-## Sushma Akoju:
+## Linear Regression Modelling to check the linear fit
 
-##### Check linear fit between all features vs popularity
+Check linear fit between all features vs popularity  
+This is multiple regression since we have multiple predictors vs one
+response variable.
 
-##### This is multiple regression since we have multiple predictors vs one response variable.
-
-##### We find a linear fit for y = \[popularity\] and X = \[ acousticness, danceability, duration\_ms, energy, instrumentalness, liveness, loudness, speechiness, tempo, valence\] to check model fit.
+We find a linear fit for y = \[popularity\] and X = \[ acousticness,
+danceability, duration\_ms, energy, instrumentalness, liveness,
+loudness, speechiness, tempo, valence\] to check model fit.
 
 ``` r
 lmfit = lm(popularity ~ acousticness + danceability + duration_ms +energy + instrumentalness + liveness + loudness + speechiness + tempo + valence, numeric_spotifydf )
@@ -1152,13 +1918,26 @@ summary(lmfit)
 plot(lmfit)
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-10-3.png)<!-- -->![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-10-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-17-3.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-17-4.png)<!-- -->
 
-## Sushma Akoju:
+The summary of linear fit suggests that R-squared value is 0.2339 which
+is not significant enough to explain how much percentage of data fits
+linearly. Standard error is 15.92 suggests this is 15.92 standard
+deviations of the residuals away from true regression fit. The p-value
+of less than 0.01 suggests that null hypothesis that predictors and
+response variables are not related can be rejected. Hence observed
+values of response variable are no better than predicted values, by a
+chance. However since this is a multiple linear regression, F-statistic
+may also be relevant here since it checks if atleast one of the
+predictors’ coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of
+squares regression) / (sum of squares error) -&gt; is the ratio of
+variance explained / variance that cannot be explained. The standard
+errors suggest that about \~75% of variance in data cannot be explained.
+P(&gt; \|t\|) for each of features also suggests null hypothesis that
+there is no relation between predictors and response variable - must be
+rejected.
 
-##### The summary of linear fit suggests that R-squared value is 0.2339 which is not significant enough to explain how much percentage of data fits linearly. Standard error is 15.92 suggests this is 15.92 standard deviations of the residuals away from true regression fit. The p-value of less than 0.01 suggests that null hypothesis that predictors and response variables are not related can be rejected. Hence observed values of response variable are no better than predicted values, by a chance. However since this is a multiple linear regression, F-statistic may also be relevant here since it checks if atleast one of the predictors’ coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of squares regression) / (sum of squares error) -&gt; is the ratio of variance explained / varinace that cannot be explained. The standard errors suggest that about \~75% of variance in data cannot be explained. P(&gt; \|t\|) for each of features also suggests null hypothesis that there is no relation between predictors and response variable - must be rejected.
-
-## checking coefficients
+checking coefficients
 
 ``` r
 coefficients(lmfit)
@@ -1170,8 +1949,6 @@ coefficients(lmfit)
     ##  -5.627835923246  -4.310590393787  -9.670551951580   0.715099218724 
     ##      speechiness            tempo          valence 
     ##  -8.108160928731  -0.004274979477 -13.225886114236
-
-## Above coefficients seems to show
 
 ``` r
 lmfit2 = lm(popularity ~ acousticness + danceability +energy + instrumentalness + liveness + loudness + speechiness + tempo + valence + key+mode+(energy * loudness) + (valence * danceability) , numeric_spotifydf )
@@ -1212,7 +1989,24 @@ summary(lmfit2)
     ## Multiple R-squared:  0.2393, Adjusted R-squared:  0.2392 
     ## F-statistic:  5630 on 13 and 232711 DF,  p-value: < 0.00000000000000022
 
-##### The summary of linear fit suggests that R-squared value is 0.2392 which should be significant enough to explain how much percentage of data fits linearly. Standard error is 15.92 suggests this is 15.92 standard deviations of the residuals away from true regression fit. The p-value of less than 0.01 suggests that null hypothesis that predictors and response variables are not related can be rejected. Hence observed values of response variable are no better than predicted values, by a chance. However since this is a multiple linear regression, F-statistic may also be relevant here since it checks if atleast one of the predictors’ coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of squares regression) / (sum of squares error) -&gt; is the ratio of variance explained / varinace that cannot be explained. The standard errors suggest that about \~75% of variance in data cannot be explained. P(&gt; \|t\|) for each of features also suggests null hypothesis that there is no relation between predictors and response variable - must be rejected. From p(&gt;\|t\|) = 0.08 for valence, seems to indicate null hypothesis true for valence and popularity score suggesting that valence has no influence on popularity score.
+The summary of linear fit suggests that R-squared value is 0.2392 which
+should be significant enough to explain how much percentage of data fits
+linearly. Standard error is 15.92 suggests this is 15.92 standard
+deviations of the residuals away from true regression fit. The p-value
+of less than 0.01 suggests that null hypothesis that predictors and
+response variables are not related can be rejected. Hence observed
+values of response variable are no better than predicted values, by a
+chance. However since this is a multiple linear regression, F-statistic
+may also be relevant here since it checks if atleast one of the
+predictors’ coefficients is non-zero. F-statistic = (SSR/SSE) = (Sum of
+squares regression) / (sum of squares error) -&gt; is the ratio of
+variance explained / varinace that cannot be explained. The standard
+errors suggest that about \~75% of variance in data cannot be explained.
+P(&gt; \|t\|) for each of features also suggests null hypothesis that
+there is no relation between predictors and response variable - must be
+rejected. From p(&gt;\|t\|) = 0.08 for valence, seems to indicate null
+hypothesis true for valence and popularity score suggesting that valence
+has no influence on popularity score.
 
 ``` r
 anova(lmfit2)
@@ -1258,9 +2052,10 @@ anova(lmfit2)
 plot(lmfit2)
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-14-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-21-2.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-21-3.png)<!-- -->![](README_files/figure-gfm/unnamed-chunk-21-4.png)<!-- -->
 
-##### get model summary for Linear regression and Generalized Linear regression with Gaussian.
+get model summary for Linear regression and Generalized Linear
+regression with Gaussian.
 
 ``` r
 models <- list(
@@ -1279,7 +2074,7 @@ modelsummary(models,
 
     ## save_kable will have the best result with magick installed.
 
-##### Get standard errors, statistics and p-values for each of models.
+Get standard errors, statistics and p-values for each of models.
 
 ``` r
 modelsummary(models,gof_omit = ".*",
@@ -1292,11 +2087,18 @@ modelsummary(models,gof_omit = ".*",
 
     ## save_kable will have the best result with magick installed.
 
-##### taking linear regression fit analysis further, using model summary package we are able to compare how features fit in comparison between linear regression as well as Gaussian Generalized Linear regression fit. There is no change in P-values or null hypothesis analysis. However, individual feature’s standard errors seems significant and are very low. This suggests that linear regression (generalized or OLS) seem to be overfitted.
+taking linear regression fit analysis further, using model summary
+package we are able to compare how features fit in comparison between
+linear regression as well as Gaussian Generalized Linear regression fit.
+There is no change in P-values or null hypothesis analysis. However,
+individual feature’s standard errors seems significant and are very low.
+This suggests that linear regression (generalized or OLS) seem to be
+overfitted.
 
-##### Random Forest Regression fit by train and test split.
+## Random Forest Regression Fit
 
-### Create train and test sets
+Random Forest Regression fit by train and test split.  
+Create train and test sets
 
 ``` r
 train = sample(1:nrow(numeric_spotifydf), 300)
@@ -1311,11 +2113,12 @@ rf.spotify
     ##                      Number of trees: 500
     ## No. of variables tried at each split: 4
     ## 
-    ##           Mean of squared residuals: 235.785
-    ##                     % Var explained: 29.46
+    ##           Mean of squared residuals: 256.521
+    ##                     % Var explained: 28.69
 
-##### In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 273.81 and explained variance is still low 27.88 % of variance explained.
-
+In case of Random Forest regression, number of trees are 500 with 4
+variables at each split. as well the MSR is 252.81 and explained
+variance is still low 24.79 % of variance explained.  
 The following plot suggests that 50 trees or so is enough to fit the
 model with RFR.
 
@@ -1323,9 +2126,10 @@ model with RFR.
 plot(rf.spotify)
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
-##### For each variables 1 to 17 of features, find Out-of-bag and test errors for each fit.
+For each variables 1 to 17 of features, find Out-of-bag and test errors
+for each fit.
 
 ``` r
 oob.err = double(17)
@@ -1353,34 +2157,38 @@ for(mtry in 1:17){
     ## Warning in randomForest.default(m, y, ...): invalid mtry: reset to within valid
     ## range
 
-##### Random Forest Regression Trees 17\*350 trees with MSE for OOB and Test errors
+Random Forest Regression Trees 17\*350 trees with MSE for OOB and Test
+errors
 
 ``` r
 matplot(1:mtry, cbind(test.err, oob.err), pch = 23, col = c("red", "blue"), type = "b", ylab="Mean Squared Error", lwd=6)
 legend("topright", legend = c("OOB", "Test"), pch = 23, col = c("red", "blue"))
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
-##### The above plot suggests that Out-Of-Bag error estimates (red colored curve) is very far apart from test error estimates. There is no correlation between OOB and test errors. Errors never really tends to minimize as the number of features increase during training.
+The above plot suggests that Out-Of-Bag error estimates (red colored
+curve) is very far apart from test error estimates. There is no
+correlation between OOB and test errors. Errors never really tends to
+minimize as the number of features increase during training.
 
 ``` r
 oob.err 
 ```
 
-    ##  [1] 245.7008 235.4772 241.0570 232.9300 240.3137 238.8437 237.1922 238.4778
-    ##  [9] 239.5243 237.6900 243.5464 242.7432 236.4484 242.9072 243.0130 240.6229
-    ## [17] 245.7865
+    ##  [1] 256.8133 254.4565 250.5019 249.7019 258.6919 260.2703 262.5641 259.8550
+    ##  [9] 256.9463 261.0295 264.8954 264.6887 272.1771 262.0539 263.7588 266.5758
+    ## [17] 270.3555
 
 ``` r
 test.err
 ```
 
-    ##  [1] 246.5881 240.8395 240.6710 243.2219 246.0018 245.5838 246.9970 246.8887
-    ##  [9] 250.4858 250.6391 249.8646 252.5771 252.3086 252.9612 254.2134 251.3154
-    ## [17] 252.0269
+    ##  [1] 246.6887 242.2641 242.7439 243.4092 243.0337 243.6699 245.3455 244.9732
+    ##  [9] 244.7181 245.6833 245.2837 245.7247 246.1798 245.3829 247.0487 246.5748
+    ## [17] 246.9585
 
-##### Basic Random Forest on all features
+Basic Random Forest on all features
 
 ``` r
 rf.spotify1 = randomForest(popularity~., data = numeric_spotifydf, subset = train, importance = TRUE)
@@ -1394,8 +2202,8 @@ rf.spotify1
     ##                      Number of trees: 500
     ## No. of variables tried at each split: 4
     ## 
-    ##           Mean of squared residuals: 232.466
-    ##                     % Var explained: 30.45
+    ##           Mean of squared residuals: 252.5125
+    ##                     % Var explained: 29.8
 
 ``` r
 summary(rf.spotify1)
@@ -1425,42 +2233,45 @@ summary(rf.spotify1)
 plot(rf.spotify1)
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
-##### In case of Random Forest regression, number of trees are 500 with 4 variables at each split. as well the MSR is 268 and explained variance is still low 29.36 % of variance explained.
+In case of Random Forest regression, number of trees are 500 with 4
+variables at each split. as well the MSR is 268 and explained variance
+is still low 29.36 % of variance explained.
 
-##### Use Random forest to find Variance based Feature Importances.
+Use Random forest to find Variance based Feature Importances.
 
 ``` r
 rf.spotify1$importance
 ```
 
     ##                      %IncMSE IncNodePurity
-    ## acousticness      71.0549683    11272.9975
-    ## danceability       9.1421299     7461.5494
-    ## duration_ms       47.8551299    12133.8866
-    ## energy            41.2680734     8180.8193
-    ## instrumentalness  12.0287258     5720.7854
-    ## key               -0.2312723     3467.0076
-    ## liveness           3.5814959     6492.8933
-    ## loudness         105.4063308    16681.1947
-    ## mode              -0.1113909      559.5766
-    ## speechiness       33.5328134     9869.4102
-    ## tempo              4.7928565     6637.8984
-    ## valence            9.7080177     6601.9925
+    ## acousticness     55.95908992    12605.0567
+    ## danceability     22.03038902     8647.4407
+    ## duration_ms       9.22192386     8241.6846
+    ## energy           42.17450145    12862.5013
+    ## instrumentalness  4.97503172     5337.2879
+    ## key              -0.02289204     3735.8114
+    ## liveness         11.30851797     7645.4004
+    ## loudness         80.13705716    17885.1039
+    ## mode              0.17800134      651.4502
+    ## speechiness      17.07094876     9700.8265
+    ## tempo            -0.60940613     5763.0800
+    ## valence          21.00623772     9465.7108
 
 ``` r
 rf.spotify1$importanceSD
 ```
 
     ##     acousticness     danceability      duration_ms           energy 
-    ##        3.7890208        1.8062963        2.8874055        3.4180208 
+    ##        3.4026817        2.0501844        1.6897903        3.3090501 
     ## instrumentalness              key         liveness         loudness 
-    ##        1.7169784        1.3147434        1.6459082        4.9272165 
+    ##        1.4894041        1.1369833        1.6464020        4.1474246 
     ##             mode      speechiness            tempo          valence 
-    ##        0.4559478        2.1099929        1.5033995        1.7233438
+    ##        0.5006059        1.9783162        1.4527310        2.0135681
 
-##### Plot the Feature importances from Random Forest Regression for each feature.
+Plot the Feature importances from Random Forest Regression for each
+feature.
 
 ``` r
 create_rfplot <- function(rf, type){
@@ -1482,29 +2293,44 @@ create_rfplot <- function(rf, type){
 create_rfplot(rf.spotify1, type = 2)
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
-##### The Random Forest Regression Feature importances suggest that duration is the most important feature of the response variable i.e Popularity score.
+The Random Forest Regression Feature importances suggest that duration
+is the most important feature of the response variable i.e Popularity
+score.
 
 ``` r
 data.frame(Feature = row.names(rf.spotify1$importance), Importance = rf.spotify1$importance[,1])
 ```
 
     ##                           Feature  Importance
-    ## acousticness         acousticness  71.0549683
-    ## danceability         danceability   9.1421299
-    ## duration_ms           duration_ms  47.8551299
-    ## energy                     energy  41.2680734
-    ## instrumentalness instrumentalness  12.0287258
-    ## key                           key  -0.2312723
-    ## liveness                 liveness   3.5814959
-    ## loudness                 loudness 105.4063308
-    ## mode                         mode  -0.1113909
-    ## speechiness           speechiness  33.5328134
-    ## tempo                       tempo   4.7928565
-    ## valence                   valence   9.7080177
+    ## acousticness         acousticness 55.95908992
+    ## danceability         danceability 22.03038902
+    ## duration_ms           duration_ms  9.22192386
+    ## energy                     energy 42.17450145
+    ## instrumentalness instrumentalness  4.97503172
+    ## key                           key -0.02289204
+    ## liveness                 liveness 11.30851797
+    ## loudness                 loudness 80.13705716
+    ## mode                         mode  0.17800134
+    ## speechiness           speechiness 17.07094876
+    ## tempo                       tempo -0.60940613
+    ## valence                   valence 21.00623772
 
-##### To do permutation Importance to compare Feature importances with that of Feature Importances from Random Forest regression’s variance based importance, we need forest and inbag values to be available in RFR forest object so Permutation-based analysis over repeated samples of all-features-except-one is done based on available statistical information. This makes Permutation Importance more relevant. The Permutation Importance done here is also conditional since we observe multi-collinearity between predictors/independent features themselves. Conditional Permutation importance more relevant in this case since finding accuracy when correlation threshold is (suggested &gt; 0.2) which is true in this case. We have multiple features having correlation &gt; 0.2 suggesting Conditional Permutation Importance as more appropriate method to find importance of a feature’s relation to response variable.
+To do permutation Importance to compare Feature importances with that of
+Feature Importances from Random Forest regression’s variance based
+importance, we need forest and inbag values to be available in RFR
+forest object so Permutation-based analysis over repeated samples of
+all-features-except-one is done based on available statistical
+information. This makes Permutation Importance more relevant. The
+Permutation Importance done here is also conditional since we observe
+multi-collinearity between predictors/independent features themselves.
+Conditional Permutation importance more relevant in this case since
+finding accuracy when correlation threshold is (suggested &gt; 0.2)
+which is true in this case. We have multiple features having correlation
+&gt; 0.2 suggesting Conditional Permutation Importance as more
+appropriate method to find importance of a feature’s relation to
+response variable.
 
 ``` r
 rf.spotify2 = randomForest(popularity~., data = numeric_spotifydf, subset = train, replace = FALSE, nodesize = 7, keep.forest = TRUE, keep.inbag = TRUE)
@@ -1518,25 +2344,32 @@ rf.spotify2
     ##                      Number of trees: 500
     ## No. of variables tried at each split: 4
     ## 
-    ##           Mean of squared residuals: 234.6463
-    ##                     % Var explained: 29.8
+    ##           Mean of squared residuals: 252.8918
+    ##                     % Var explained: 29.7
 
 ``` r
 permimp <- permimp(rf.spotify2, conditional = TRUE, progressBar = FALSE, do_check=FALSE)
 ```
 
-##### Permutation Importances are calculated by repeated bagging, bootstrapping and sampling from Random Forest Regression fit to derive importance of a feature based on change in error (positive or negative or none). If there was no change in error in absence of a feature, that feature is considered not important for observed values of reponse variable.
+## Permutation Importances
+
+Permutation Importances are calculated by repeated bagging,
+bootstrapping and sampling from Random Forest Regression fit to derive
+importance of a feature based on change in error (positive or negative
+or none). If there was no change in error in absence of a feature, that
+feature is considered not important for observed values of reponse
+variable.
 
 ``` r
 permimp$values
 ```
 
     ##     acousticness     danceability      duration_ms           energy 
-    ##        5.6853740        0.3011930       23.4989491        2.5854005 
+    ##        5.3470576        3.6008010        7.2297653        4.0697142 
     ## instrumentalness              key         liveness         loudness 
-    ##        3.2084568       -0.7243447        1.8304988        8.3122517 
+    ##        1.9339750       -0.5066263        7.7201003        6.5842309 
     ##             mode      speechiness            tempo          valence 
-    ##       -0.1895208       10.3305935        2.6615618        3.5579121
+    ##       -0.3947914        7.3091028       -1.3946197       10.0170245
 
 ``` r
 ggplot(as.data.frame(permimp$values), aes(x = reorder(names(permimp$values)
@@ -1550,13 +2383,65 @@ ggplot(as.data.frame(permimp$values), aes(x = reorder(names(permimp$values)
              axis.text.y  = element_text(size = 20, color = "black"))+xlab("Features")+ylab("Importance")
 ```
 
-![](sushma-akoju-project_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
-##### Lastly, we see that on the contrary, acousticness has no influence over popularity score. However, duration, instrumentalness, loudness, valence seem to have good influence over response variable.
+Lastly, we see that on the contrary, acousticness has no influence over
+popularity score. However, duration, instrumentalness, loudness, valence
+seem to have good influence over response variable.
 
-##### Finally, we think given the number of tracks, we can use most statsitically important features to train and test regression fit using cross validation and epochs. Further we would like to conduct tests on a randomly generated date from the model fit. We further would like to explore, as a future work, to find regression or models that better fit multi-collinear features while also finding some better techniques to normalize each of feature-wise distributions. The additional information about musical and vocal acoustics and the pattern in which the acoustic signals themselves relate to the popularity score will be helpful.
+Finally, we think given the number of tracks, we can use most
+statsitically important features to train and test regression fit using
+cross validation and epochs. Further we would like to conduct tests on a
+randomly generated date from the model fit. We further would like to
+explore, as a future work, to find regression or models that better fit
+multi-collinear features while also finding some better techniques to
+normalize each of feature-wise distributions.
 
+# Potential Bias and Conclusion
 
+## Bias
 
+Following are some of the bias affecting our data and causing an
+unreliable analysis.
 
+1.  Currently, the Spotify user base predominantly comprises European,
+    North American and Latin America
+    listeners[ref](“%20https://www.statista.com/statistics/813902/spotify-share-monthly-active-users-by-region/”).
+    This heavily influences popularity charts and which songs get plays.
+    This lack of diversity certainly affects our data set and makes it
+    less nuanced.
 
+2.  There are over 70 million songs on Spotify, of which this data set
+    includes only 230,000. Having feature values of these less popular
+    songs would be immensely helpful to determine which songs have the
+    potential to get famous.
+
+3.  On the analytics end, our modest learning models have a limited
+    capability of predicting popularity with the provided variables. We
+    might need to get more sophisticated with our modeling as we have
+    only scratched the surface at this point of time and might need to
+    apply fancier predictive.
+
+4.  A more robust dataset with added attributes, in addition to a more
+    elegant model, would definitely prove more effective and help us
+    achieve our end goals with more satisfactory results.
+
+## Conclusion
+
+Lastly, we see that on the contrary, acousticness has no influence over
+popularity score. However, duration, instrumentalness, loudness, valence
+seem to have good influence over response variable.  
+Finally, we think given the number of tracks, we can use most
+statistically important features to train and test regression fit using
+cross validation and epochs. Further we would like to conduct tests on a
+randomly generated date from the model fit. We further would like to
+explore, as a future work, to find regression or models that better fit
+multi-collinear features while also finding some better techniques to
+normalize each of feature-wise distributions. The additional information
+about musical and vocal acoustics and the pattern in which the acoustic
+signals themselves relate to the popularity score will be helpful.
+
+-   [Github
+    repository](https://github.com/sushmaakoju/spotify-tracks-data-analysis)
+-   [Github
+    repository](https://sushmaakoju.github.io/spotify-tracks-data-analysis/)
