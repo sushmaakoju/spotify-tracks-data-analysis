@@ -203,3 +203,25 @@ From above graph we can list out below significant observations -
 3) Loudness and acousticness have a highly-correlated inverse relationship
 
 4) Some of the variables most correlated to Popularity seem to be: acousticness, danceability, energy, instrumentalness, and loudness.
+
+
+
+
+# Potential Bias and Conclusion
+
+
+## Bias
+Following are some of the bias affecting our data and causing an unreliable analysis.
+
+1. Currently, the Spotify user base predominantly comprises European, North American and Latin America listeners[ref](“ https://www.statista.com/statistics/813902/spotify-share-monthly-active-users-by-region/”).  This heavily influences popularity charts and which songs get plays. This lack of diversity certainly affects our dataset and makes it less nuanced.
+
+2. There are over 70 million songs on Spotify, of which this data set includes only 230,000. Having feature values of these less popular songs would be immensely helpful to determine which songs have the potential to get famous.
+
+3. On the analytics end, our modest learning models have a limited capability of predicting popularity with the provided variables. We might need to get more sophisticated with our modeling as we have only scratched the surface at this point of time and might need to apply fancier predictive.
+
+4. A more robust dataset with added attributes, in addition to a more elegant model, would definitely prove more effective and help us achieve our end goals with more satisfactory results.
+
+## Conclusion
+Lastly, we see that on the contrary, acousticness has no influence over popularity score. However, duration, instrumentalness, loudness, valence seem to have good influence over response variable.
+Finally, we think given the number of tracks, we can use most statistically important features to train and test regression fit using cross validation and epochs. Further we would like to conduct tests on a randomly generated date from the model fit. We further would like to explore, as a future work, to find regression or models that better fit multi-collinear features while also finding some better techniques to normalize each of feature-wise distributions. The additional information about musical and vocal acoustics and the pattern in which the acoustic signals themselves relate to the popularity score will be helpful
+
