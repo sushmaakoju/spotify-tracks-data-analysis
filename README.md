@@ -54,7 +54,7 @@ git push origin main
 ##### Avani's Data visualizations, analysis and Linear Regression Modelling: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/avani-patil
 
 
-##### My(sushma's) analysis on understanding musical and vocal acoustics and Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library are: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
+##### My(sushma's) analysis on understanding musical and vocal acoustics and Data visualizations using <a href='https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html'>corrplot </a> library, and Linear regression with result analysis, Generalized Linear model, Random Forest regression, Permutation Importance and Feature importances analysis only w.r.t modelling and feature and permutation importances only: https://github.com/sushmaakoju/spotify-tracks-data-analysis/tree/main/sushma-akoju
 
 
 
