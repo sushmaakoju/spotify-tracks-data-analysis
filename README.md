@@ -1,5 +1,6 @@
 # spotify-tracks-data-analysis
-## This is the repository for DTSC 5301 course, Data Science as a Field, University of Colorado Boulder.
+## This is the repository for DTSC 5301 course, Data Science as a Field, University of Colorado Boulder. 
+If any additional resources were used for specific implementation, it is provided in the respective implementation file. The code provided here is implicitly expected not to be replicated for homeworks, assignments or any other programming work. It is welcome to take inspiration, but it is implicitly expected to cite this resource if used for learning, inspiration purposes. Please refer <a href="https://github.com/sushmaakoju/spotify-tracks-data-analysis/blob/main/CODE_OF_CONDUCT.md">code of conduc</a>.
 ### Dataset credits: https://www.kaggle.com/zaheenhamidani/ultimate-spotify-tracks-db
 ### About the Dataset features: https://www.kaggle.com/tomigelo/spotify-audio-features
 ### https://developer.spotify.com/documentation/web-api/reference/#endpoint-get-audio-features
